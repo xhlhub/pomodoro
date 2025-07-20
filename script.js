@@ -206,7 +206,11 @@ function renderTasks() {
                     </div>
                     <div class="progress-text">${task.progress}%</div>
                 </div>
-                <span class="task-timer">🍅 x ${task.pomodoroCount}</span>
+                ${
+                  task.pomodoroCount > 0
+                    ? `<span class="task-timer">🍅 x ${task.pomodoroCount}</span>`
+                    : ""
+                }
             </div>
             <div class="task-actions">
                 ${
