@@ -176,11 +176,17 @@ function hideProgressModal() {
 function saveTaskProgress() {
   if (!currentTaskForProgress) return;
 
+  const previousProgress = currentTaskForProgress.progress;
   currentTaskForProgress.progress = selectedProgress;
 
   // 如果进度达到100%，自动标记为完成
   if (selectedProgress >= 100) {
     currentTaskForProgress.completed = true;
+
+    // 如果之前进度不是100%，现在设置为100%，播放完成音效
+    if (previousProgress < 100) {
+      cheersSound.play().catch((e) => console.log("音效播放失败:", e));
+    }
   }
 
   saveTasks();
