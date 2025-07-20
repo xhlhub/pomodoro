@@ -211,18 +211,21 @@ function renderTasks() {
             <div class="task-actions">
                 ${
                   !task.completed
-                    ? `<button class="btn btn-success btn-small" onclick="startTaskPomodoro(${task.id})">开始番茄钟</button>`
+                    ? `<button class="btn-icon btn-success" onclick="startTaskPomodoro(${task.id})" title="开始番茄钟">
+                        <i class="fas fa-play"></i>
+                       </button>`
                     : ""
                 }
-                <button class="btn btn-info btn-small" onclick="showProgressModal(${
+                <button class="btn-icon btn-info" onclick="showProgressModal(${
                   task.id
-                })">更新进度</button>
-                <button class="btn btn-warning btn-small" onclick="toggleTaskComplete(${
+                })" title="更新进度">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+                <button class="btn-icon btn-danger" onclick="deleteTask(${
                   task.id
-                })">${task.completed ? "恢复" : "完成"}</button>
-                <button class="btn btn-danger btn-small" onclick="deleteTask(${
-                  task.id
-                })">删除</button>
+                })" title="删除任务">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         `;
 

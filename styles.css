@@ -239,13 +239,98 @@ header p {
 
 .task-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-small {
   padding: 8px 15px;
   font-size: 14px;
   min-width: 80px;
+}
+
+/* 图标按钮样式 */
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-icon.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-icon.btn-success:hover {
+  background: #218838;
+}
+
+.btn-icon.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-icon.btn-info:hover {
+  background: #138496;
+}
+
+.btn-icon.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-icon.btn-warning:hover {
+  background: #e0a800;
+}
+
+.btn-icon.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-icon.btn-danger:hover {
+  background: #c82333;
+}
+
+/* 工具提示样式 */
+.btn-icon[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.btn-icon[title]:hover::before {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  pointer-events: none;
 }
 
 .pomodoro-section {
@@ -541,6 +626,13 @@ header p {
   .task-actions {
     width: 100%;
     justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .btn-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
   }
 
   .progress-options {
@@ -550,6 +642,12 @@ header p {
   .custom-progress {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  /* 移动端工具提示优化 */
+  .btn-icon[title]:hover::after,
+  .btn-icon[title]:hover::before {
+    display: none;
   }
 }
 
