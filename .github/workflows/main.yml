@@ -9,6 +9,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
 
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }} # 👈 这一段是关键
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
