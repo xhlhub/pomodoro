@@ -148,6 +148,7 @@ header p {
   border-radius: 10px;
   border-left: 4px solid #667eea;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .task-item:hover {
@@ -158,6 +159,13 @@ header p {
 .task-item.completed {
   opacity: 0.6;
   border-left-color: #28a745;
+  cursor: default;
+}
+
+.task-item.active {
+  background: #e3f2fd;
+  border-left-color: #2196f3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
 
 .task-info {

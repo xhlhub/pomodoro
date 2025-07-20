@@ -115,6 +115,7 @@ function addTask() {
     name: taskName,
     completed: false,
     pomodoroCount: 0,
+    timeSpent: 0, // 花费的时间（分钟）
     progress: 0,
     date: getCurrentDateString(),
     createdAt: new Date().toISOString(),
@@ -199,7 +200,36 @@ function renderTasks() {
 
   tasks.forEach((task, index) => {
     const taskElement = document.createElement("div");
-    taskElement.className = `task-item ${task.completed ? "completed" : ""}`;
+    taskElement.className = `task-item ${task.completed ? "completed" : ""} ${
+      currentTask && currentTask.id === task.id ? "active" : ""
+    }`;
+
+    // 为任务项添加点击事件
+    taskElement.addEventListener("click", () => {
+      if (!task.completed) {
+        startTaskPomodoro(task.id);
+      }
+    });
+
+    // 计算番茄钟显示值
+    let pomodoroDisplay = "";
+    if (task.completed) {
+      // 任务完成时，显示时间比率（花费时间/25分钟）
+      const timeRatio = task.timeSpent / 25;
+      if (timeRatio > 0) {
+        // 如果是整数或1位小数才显示
+        const roundedRatio = Math.round(timeRatio * 10) / 10;
+        if (
+          roundedRatio === Math.floor(roundedRatio) ||
+          (timeRatio * 10) % 1 === 0
+        ) {
+          pomodoroDisplay = `🍅 x ${roundedRatio}`;
+        }
+      }
+    } else if (task.pomodoroCount > 0) {
+      // 任务未完成但番茄钟结束后，显示整数番茄钟数量
+      pomodoroDisplay = `🍅 x ${task.pomodoroCount}`;
+    }
 
     taskElement.innerHTML = `
             <div class="task-info">
@@ -217,23 +247,16 @@ function renderTasks() {
                     <div class="progress-text">${task.progress}%</div>
                 </div>
                 ${
-                  task.pomodoroCount > 0
-                    ? `<span class="task-timer">🍅 x ${task.pomodoroCount}</span>`
+                  pomodoroDisplay
+                    ? `<span class="task-timer">${pomodoroDisplay}</span>`
                     : ""
                 }
             </div>
-            <div class="task-actions">
-                ${
-                  !task.completed
-                    ? `<button class="btn-icon btn-success" onclick="startTaskPomodoro(${task.id})" title="开始番茄钟">
-                        <i class="fas fa-play"></i>
-                       </button>`
-                    : ""
-                }
+            <div class="task-actions" onclick="event.stopPropagation()">
                 <button class="btn-icon btn-info" onclick="showProgressModal(${
                   task.id
                 })" title="更新进度">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-hand-pointer"></i>
                 </button>
                 <button class="btn-icon btn-danger" onclick="deleteTask(${
                   task.id
@@ -350,6 +373,7 @@ function completePomodoro() {
   // 更新任务统计
   if (currentTask) {
     currentTask.pomodoroCount++;
+    currentTask.timeSpent += 25; // 增加25分钟
     completedPomodoros++;
     totalTime += 25;
   }
@@ -447,6 +471,7 @@ function loadTasks() {
       if (!task.progress) task.progress = 0;
       if (!task.date) task.date = getCurrentDateString();
       if (!task.createdAt) task.createdAt = new Date().toISOString();
+      if (!task.timeSpent) task.timeSpent = task.pomodoroCount * 25; // 根据番茄钟数量计算时间
     });
   }
 
