@@ -235,6 +235,7 @@ header p {
   font-weight: 600;
   min-width: 80px;
   text-align: center;
+  margin-right: 15px;
 }
 
 .task-actions {

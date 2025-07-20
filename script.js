@@ -206,7 +206,7 @@ function renderTasks() {
                     </div>
                     <div class="progress-text">${task.progress}%</div>
                 </div>
-                <span class="task-timer">${task.pomodoroCount} 番茄钟</span>
+                <span class="task-timer">🍅 x ${task.pomodoroCount}</span>
             </div>
             <div class="task-actions">
                 ${
