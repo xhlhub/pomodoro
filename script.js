@@ -12,6 +12,10 @@ let totalTime = 0;
 let selectedProgress = 0;
 let currentTaskForProgress = null;
 
+// 音效对象
+const clockSound = new Audio("audio/clock.mp3");
+const cheersSound = new Audio("audio/cheers.mp3");
+
 // DOM 元素
 const taskInput = document.getElementById("taskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
@@ -261,6 +265,9 @@ function startPomodoro() {
   isRunning = true;
   isPaused = false;
 
+  // 播放开始音效
+  clockSound.play().catch((e) => console.log("音效播放失败:", e));
+
   startBtn.style.display = "none";
   pauseBtn.style.display = "inline-block";
   resumeBtn.style.display = "none";
@@ -330,6 +337,9 @@ function completePomodoro() {
   clearInterval(timer);
   isRunning = false;
   isPaused = false;
+
+  // 播放完成音效
+  cheersSound.play().catch((e) => console.log("音效播放失败:", e));
 
   // 更新任务统计
   if (currentTask) {
