@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*.*.*" # 每次打 tag 会触发构建（如 v1.0.0）
+  release:
+  types: [published]
 
 jobs:
   build-windows:
