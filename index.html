@@ -70,6 +70,39 @@
       </div>
     </div>
 
+    <!-- 进度管理模态框 -->
+    <div id="progressModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>更新任务进度</h3>
+          <span class="close" id="closeModal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>任务：<span id="modalTaskName"></span></p>
+          <div class="progress-options">
+            <button class="progress-btn" data-progress="20">20%</button>
+            <button class="progress-btn" data-progress="50">50%</button>
+            <button class="progress-btn" data-progress="100">100%</button>
+          </div>
+          <div class="custom-progress">
+            <label for="customProgress">自定义进度：</label>
+            <input
+              type="range"
+              id="customProgress"
+              min="0"
+              max="100"
+              value="0"
+            />
+            <span id="customProgressValue">0%</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveProgress" class="btn btn-primary">保存进度</button>
+          <button id="cancelProgress" class="btn btn-secondary">取消</button>
+        </div>
+      </div>
+    </div>
+
     <script src="script.js"></script>
   </body>
 </html>

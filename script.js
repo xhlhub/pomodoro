@@ -9,6 +9,8 @@ let isRunning = false;
 let isPaused = false;
 let completedPomodoros = 0;
 let totalTime = 0;
+let selectedProgress = 0;
+let currentTaskForProgress = null;
 
 // DOM 元素
 const taskInput = document.getElementById("taskInput");
@@ -25,11 +27,21 @@ const currentTaskName = document.getElementById("currentTaskName");
 const completedPomodorosEl = document.getElementById("completedPomodoros");
 const totalTimeEl = document.getElementById("totalTime");
 
+// 模态框元素
+const progressModal = document.getElementById("progressModal");
+const modalTaskName = document.getElementById("modalTaskName");
+const closeModal = document.getElementById("closeModal");
+const saveProgress = document.getElementById("saveProgress");
+const cancelProgress = document.getElementById("cancelProgress");
+const customProgress = document.getElementById("customProgress");
+const customProgressValue = document.getElementById("customProgressValue");
+
 // 初始化
 document.addEventListener("DOMContentLoaded", () => {
   loadTasks();
   updateStats();
   renderTasks();
+  setupModalEvents();
 });
 
 // 事件监听器
@@ -45,6 +57,50 @@ pauseBtn.addEventListener("click", pausePomodoro);
 resumeBtn.addEventListener("click", resumePomodoro);
 stopBtn.addEventListener("click", stopPomodoro);
 
+// 模态框事件设置
+function setupModalEvents() {
+  closeModal.addEventListener("click", hideProgressModal);
+  saveProgress.addEventListener("click", saveTaskProgress);
+  cancelProgress.addEventListener("click", hideProgressModal);
+
+  // 进度按钮事件
+  document.querySelectorAll(".progress-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      document
+        .querySelectorAll(".progress-btn")
+        .forEach((b) => b.classList.remove("active"));
+      e.target.classList.add("active");
+      selectedProgress = parseInt(e.target.dataset.progress);
+      customProgress.value = selectedProgress;
+      customProgressValue.textContent = selectedProgress + "%";
+    });
+  });
+
+  // 自定义进度滑块事件
+  customProgress.addEventListener("input", (e) => {
+    selectedProgress = parseInt(e.target.value);
+    customProgressValue.textContent = selectedProgress + "%";
+    document
+      .querySelectorAll(".progress-btn")
+      .forEach((b) => b.classList.remove("active"));
+  });
+
+  // 点击模态框外部关闭
+  progressModal.addEventListener("click", (e) => {
+    if (e.target === progressModal) {
+      hideProgressModal();
+    }
+  });
+}
+
+// 获取当前日期字符串
+function getCurrentDateString() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  return `${month}/${day}`;
+}
+
 // 任务管理函数
 function addTask() {
   const taskName = taskInput.value.trim();
@@ -55,6 +111,9 @@ function addTask() {
     name: taskName,
     completed: false,
     pomodoroCount: 0,
+    progress: 0,
+    date: getCurrentDateString(),
+    createdAt: new Date().toISOString(),
   };
 
   tasks.push(task);
@@ -79,21 +138,74 @@ function toggleTaskComplete(taskId) {
   const task = tasks.find((t) => t.id === taskId);
   if (task) {
     task.completed = !task.completed;
+    if (task.completed) {
+      task.progress = 100;
+    }
     saveTasks();
     renderTasks();
   }
 }
 
+function showProgressModal(taskId) {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) return;
+
+  currentTaskForProgress = task;
+  modalTaskName.textContent = task.name;
+  selectedProgress = task.progress;
+
+  // 重置模态框状态
+  document
+    .querySelectorAll(".progress-btn")
+    .forEach((b) => b.classList.remove("active"));
+  customProgress.value = selectedProgress;
+  customProgressValue.textContent = selectedProgress + "%";
+
+  progressModal.style.display = "flex";
+}
+
+function hideProgressModal() {
+  progressModal.style.display = "none";
+  currentTaskForProgress = null;
+}
+
+function saveTaskProgress() {
+  if (!currentTaskForProgress) return;
+
+  currentTaskForProgress.progress = selectedProgress;
+
+  // 如果进度达到100%，自动标记为完成
+  if (selectedProgress >= 100) {
+    currentTaskForProgress.completed = true;
+  }
+
+  saveTasks();
+  renderTasks();
+  hideProgressModal();
+}
+
 function renderTasks() {
   taskList.innerHTML = "";
 
-  tasks.forEach((task) => {
+  tasks.forEach((task, index) => {
     const taskElement = document.createElement("div");
     taskElement.className = `task-item ${task.completed ? "completed" : ""}`;
 
     taskElement.innerHTML = `
             <div class="task-info">
-                <span class="task-name">${task.name}</span>
+                <div class="task-number">${index + 1}</div>
+                <div class="task-details">
+                    <span class="task-name">${task.name}</span>
+                    <span class="task-date">${task.date}</span>
+                </div>
+                <div class="task-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${
+                          task.progress
+                        }%"></div>
+                    </div>
+                    <div class="progress-text">${task.progress}%</div>
+                </div>
                 <span class="task-timer">${task.pomodoroCount} 番茄钟</span>
             </div>
             <div class="task-actions">
@@ -102,6 +214,9 @@ function renderTasks() {
                     ? `<button class="btn btn-success btn-small" onclick="startTaskPomodoro(${task.id})">开始番茄钟</button>`
                     : ""
                 }
+                <button class="btn btn-info btn-small" onclick="showProgressModal(${
+                  task.id
+                })">更新进度</button>
                 <button class="btn btn-warning btn-small" onclick="toggleTaskComplete(${
                   task.id
                 })">${task.completed ? "恢复" : "完成"}</button>
@@ -304,6 +419,12 @@ function loadTasks() {
 
   if (savedTasks) {
     tasks = JSON.parse(savedTasks);
+    // 为旧任务添加新字段
+    tasks.forEach((task) => {
+      if (!task.progress) task.progress = 0;
+      if (!task.date) task.date = getCurrentDateString();
+      if (!task.createdAt) task.createdAt = new Date().toISOString();
+    });
   }
 
   if (savedStats) {
