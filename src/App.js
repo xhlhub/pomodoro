@@ -222,17 +222,34 @@ function App() {
           completed: progress >= 100
         };
         
-        // 如果任务刚完成，播放音效
+        // 如果任务刚完成，播放音效并暂停计时器
         if (!wasCompleted && progress >= 100) {
           const audio = new Audio('audio/cheers.mp3');
           audio.play().catch(e => console.log('音效播放失败:', e));
+          
+          // 暂停该任务的计时器
+          setTaskTimerStates(prevTimerStates => ({
+            ...prevTimerStates,
+            [taskId]: prevTimerStates[taskId] ? {
+              ...prevTimerStates[taskId],
+              isRunning: false,
+              isPaused: true
+            } : prevTimerStates[taskId]
+          }));
+          
+          // 如果完成的任务是当前选中的任务，清除当前任务状态
+          if (currentTask && currentTask.id === taskId) {
+            setCurrentTask(null);
+          }
+          
+          console.log(`任务 ${task.name} 已完成，计时器已暂停`);
         }
         
         return updatedTask;
       }
       return task;
     }));
-  }, [setTasks]);
+  }, [setTasks, setTaskTimerStates, currentTask]);
 
   const startTaskPomodoro = useCallback((taskId) => {
     const task = tasks.find(t => t.id === taskId);
