@@ -61,6 +61,9 @@ function TaskItem({
           <span className="task-name">{task.name}</span>
           <span className="task-date">{task.date}</span>
         </div>
+        {pomodoroDisplay && (
+          <span className="task-timer">{pomodoroDisplay}</span>
+        )}
         <div className="task-progress">
           <div className="progress-bar">
             <div 
@@ -70,9 +73,6 @@ function TaskItem({
           </div>
           <div className="progress-text">{task.progress}%</div>
         </div>
-        {pomodoroDisplay && (
-          <span className="task-timer">{pomodoroDisplay}</span>
-        )}
       </div>
       <div className="task-actions">
         <button 
