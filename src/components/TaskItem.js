@@ -1,5 +1,6 @@
 import React from 'react';
 import './TaskItem.css';
+import ClockIcon from './ClockIcon';
 
 function TaskItem({ 
   task, 
@@ -50,7 +51,7 @@ function TaskItem({
       <div className="task-info">
         <div className="task-number">
           {isRunning ? (
-            <i className="fas fa-hourglass-half" style={{color: 'white'}}></i>
+            <ClockIcon size={24} color="white" />
           ) : (
             index + 1
           )}
