@@ -42,7 +42,8 @@ function App() {
         newTimerStates[task.id] = {
           timeLeft: POMODORO_DURATION_SECONDS,
           isRunning: false,
-          isPaused: false
+          isPaused: false,
+          runningSeconds: 0  // 追踪当前运行的秒数
         };
         needsUpdate = true;
       }
@@ -91,17 +92,18 @@ function App() {
       };
       showCompletionMessage();
 
-      // 更新任务统计
+      // 更新任务统计（timeSpent已在全局计时器中实时更新，这里只更新pomodoroCount）
       setTasks(prev => prev.map(t => 
         t.id === taskId 
-          ? { ...t, pomodoroCount: t.pomodoroCount + 1, timeSpent: t.timeSpent + POMODORO_DURATION_MINUTES }
+          ? { ...t, pomodoroCount: t.pomodoroCount + 1 }
           : t
       ));
       
-      // 更新全局统计
+      // 更新全局统计（使用实际花费时间）
+      const actualTimeSpent = POMODORO_DURATION_MINUTES; // 一个完整番茄钟的时间
       setStats(prev => ({
         completedPomodoros: prev.completedPomodoros + 1,
-        totalTime: prev.totalTime + POMODORO_DURATION_MINUTES
+        totalTime: prev.totalTime + actualTimeSpent
       }));
 
       // 发送通知
@@ -115,44 +117,79 @@ function App() {
   useEffect(() => {
     // 启动全局计时器，每秒检查所有任务状态
     globalTimerRef.current = setInterval(() => {
+      let timerUpdates = {};
+      let taskTimeUpdates = {};
+      
       setTaskTimerStates(prev => {
         const newStates = { ...prev };
-        let hasChanges = false;
-        let hasRunningTasks = false;
+        let hasTimerChanges = false;
 
         // 遍历所有任务，为正在运行的任务计时
         Object.keys(newStates).forEach(taskId => {
           const currentState = newStates[taskId];
           if (currentState && currentState.isRunning && currentState.timeLeft > 0) {
-            hasRunningTasks = true;
+            
             if (currentState.timeLeft <= 1) {
               // 计时结束
               newStates[taskId] = {
                 ...currentState,
                 timeLeft: POMODORO_DURATION_SECONDS,
                 isRunning: false,
-                isPaused: false
+                isPaused: false,
+                runningSeconds: 0  // 重置运行秒数
               };
+              
+              // 计算最终的时间花费（包括剩余秒数）
+              const finalMinutes = Math.round((currentState.runningSeconds + 1) / 60 * 10) / 10;
+              taskTimeUpdates[taskId] = finalMinutes;
+              
               // 触发完成回调
               setTimeout(() => onPomodoroComplete(parseInt(taskId)), 100);
-              hasChanges = true;
+              hasTimerChanges = true;
             } else {
-              // 减少时间
-              newStates[taskId] = {
-                ...currentState,
-                timeLeft: currentState.timeLeft - 1
-              };
-              hasChanges = true;
+              // 增加运行秒数
+              const newRunningSeconds = (currentState.runningSeconds || 0) + 1;
+              
+              // 每60秒更新一次timeSpent
+              if (newRunningSeconds % 60 === 0) {
+                const minutesToAdd = 1; // 每60秒加1分钟
+                taskTimeUpdates[taskId] = minutesToAdd;
+                
+                newStates[taskId] = {
+                  ...currentState,
+                  timeLeft: currentState.timeLeft - 1,
+                  runningSeconds: 0  // 重置秒数计数器
+                };
+              } else {
+                newStates[taskId] = {
+                  ...currentState,
+                  timeLeft: currentState.timeLeft - 1,
+                  runningSeconds: newRunningSeconds
+                };
+              }
+              hasTimerChanges = true;
             }
           }
         });
 
-        return hasChanges ? newStates : prev;
+        // 批量更新任务的timeSpent
+        if (Object.keys(taskTimeUpdates).length > 0) {
+          setTasks(prevTasks => 
+            prevTasks.map(task => {
+              const timeToAdd = taskTimeUpdates[task.id];
+              return timeToAdd 
+                ? { ...task, timeSpent: task.timeSpent + timeToAdd }
+                : task;
+            })
+          );
+        }
+
+        return hasTimerChanges ? newStates : prev;
       });
     }, 1000);
 
     return () => clearInterval(globalTimerRef.current);
-  }, [onPomodoroComplete]); // 移除taskTimerStates依赖
+  }, [onPomodoroComplete, setTasks]); // 移除taskTimerStates依赖
 
   const addTask = useCallback((taskName) => {
     const newTask = {
@@ -172,7 +209,8 @@ function App() {
       [newTask.id]: {
         timeLeft: POMODORO_DURATION_SECONDS,
         isRunning: false,
-        isPaused: false
+        isPaused: false,
+        runningSeconds: 0  // 追踪当前运行的秒数
       }
     }));
     
@@ -251,7 +289,8 @@ function App() {
     return taskTimerStates[currentTask.id] || {
       timeLeft: POMODORO_DURATION_SECONDS,
       isRunning: false,
-      isPaused: false
+      isPaused: false,
+      runningSeconds: 0
     };
   }, [currentTask, taskTimerStates]);
 

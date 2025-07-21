@@ -31,12 +31,12 @@ function TaskItem({
   // 计算番茄钟显示值
   const getPomodoroDisplay = () => {
     if (task.completed && task.timeSpent > 0) {
+      // 任务完成时：显示实际花费时间的番茄钟比例（支持小数）
       const timeRatio = task.timeSpent / POMODORO_DURATION_MINUTES;
       const roundedRatio = Math.round(timeRatio * 10) / 10;
-      if (roundedRatio === Math.floor(roundedRatio) || (timeRatio * 10) % 1 === 0) {
-        return `🍅 x ${roundedRatio}`;
-      }
+      return `🍅 x ${roundedRatio}`;
     } else if (!task.completed && task.pomodoroCount > 0) {
+      // 任务未完成时：显示完整的番茄钟数量（整数）
       return `🍅 x ${task.pomodoroCount}`;
     }
     return '';

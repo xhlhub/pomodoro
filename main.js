@@ -4,7 +4,7 @@ const isDev = !app.isPackaged;
 
 // 应用配置 - 统一配置源
 const APP_CONFIG = {
-  POMODORO_DURATION_MINUTES: 1,
+  POMODORO_DURATION_MINUTES: 2,
   BREAK_DURATION_MINUTES: 5,
   LONG_BREAK_DURATION_MINUTES: 15
 };
