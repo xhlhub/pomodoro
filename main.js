@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain, Notification } = require("electron");
 const path = require("path");
 const isDev = !app.isPackaged;
 
+// 番茄钟时间常量（与src/utils/constants.js保持同步）
+const POMODORO_DURATION_MINUTES = 25;
+
 let mainWindow;
 
 function createWindow() {
@@ -85,7 +88,7 @@ ipcMain.on("pomodoro-start", (event, taskName) => {
   if (Notification.isSupported()) {
     const notification = new Notification({
       title: "番茄钟开始！",
-      body: `开始专注任务 "${taskName}"，25分钟后见！`,
+      body: `开始专注任务 "${taskName}"，${POMODORO_DURATION_MINUTES}分钟后见！`,
       icon: path.join(__dirname, "icon.ico"),
       silent: false,
     });

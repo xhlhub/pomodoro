@@ -7,6 +7,7 @@ import Stats from './components/Stats';
 import ProgressModal from './components/ProgressModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getCurrentDateString } from './utils/dateUtils';
+import { POMODORO_DURATION_SECONDS, POMODORO_DURATION_MINUTES } from './utils/constants';
 
 const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
 
@@ -29,7 +30,7 @@ function App() {
       progress: task.progress || 0,
       date: task.date || getCurrentDateString(),
       createdAt: task.createdAt || new Date().toISOString(),
-      timeSpent: task.timeSpent || (task.pomodoroCount * 25)
+      timeSpent: task.timeSpent || (task.pomodoroCount * POMODORO_DURATION_MINUTES)
     }));
     
     // 为缺少计时器状态的任务添加默认状态
@@ -39,7 +40,7 @@ function App() {
     tasks.forEach(task => {
       if (!newTimerStates[task.id]) {
         newTimerStates[task.id] = {
-          timeLeft: 25 * 60,
+          timeLeft: POMODORO_DURATION_SECONDS,
           isRunning: false,
           isPaused: false
         };
@@ -93,14 +94,14 @@ function App() {
       // 更新任务统计
       setTasks(prev => prev.map(t => 
         t.id === taskId 
-          ? { ...t, pomodoroCount: t.pomodoroCount + 1, timeSpent: t.timeSpent + 25 }
+          ? { ...t, pomodoroCount: t.pomodoroCount + 1, timeSpent: t.timeSpent + POMODORO_DURATION_MINUTES }
           : t
       ));
       
       // 更新全局统计
       setStats(prev => ({
         completedPomodoros: prev.completedPomodoros + 1,
-        totalTime: prev.totalTime + 25
+        totalTime: prev.totalTime + POMODORO_DURATION_MINUTES
       }));
 
       // 发送通知
@@ -128,7 +129,7 @@ function App() {
               // 计时结束
               newStates[taskId] = {
                 ...currentState,
-                timeLeft: 25 * 60, // 重置为25分钟
+                timeLeft: POMODORO_DURATION_SECONDS,
                 isRunning: false,
                 isPaused: false
               };
@@ -169,7 +170,7 @@ function App() {
     setTaskTimerStates(prev => ({
       ...prev,
       [newTask.id]: {
-        timeLeft: 25 * 60, // 25分钟，以秒为单位
+        timeLeft: POMODORO_DURATION_SECONDS,
         isRunning: false,
         isPaused: false
       }
@@ -248,7 +249,7 @@ function App() {
   const getCurrentTaskTimerState = useCallback(() => {
     if (!currentTask) return null;
     return taskTimerStates[currentTask.id] || {
-      timeLeft: 25 * 60,
+      timeLeft: POMODORO_DURATION_SECONDS,
       isRunning: false,
       isPaused: false
     };

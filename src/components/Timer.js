@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Timer.css';
+import { POMODORO_DURATION_SECONDS } from '../utils/constants';
 
 function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate, onPauseOtherTasks, onStartTaskTimer }) {
   const clockSoundRef = useRef(null);
   
   // 从传入的状态中获取计时器数据
-  const timeLeft = timerState?.timeLeft || 25 * 60;
+  const timeLeft = timerState?.timeLeft || POMODORO_DURATION_SECONDS;
   const isRunning = timerState?.isRunning || false;
   const isPaused = timerState?.isPaused || false;
 
@@ -60,7 +61,7 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
     onTimerStateUpdate(currentTask.id, {
       isRunning: false,
       isPaused: false,
-      timeLeft: 25 * 60
+      timeLeft: POMODORO_DURATION_SECONDS
     });
     onStop();
   };

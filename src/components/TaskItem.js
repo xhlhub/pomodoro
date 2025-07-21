@@ -1,6 +1,7 @@
 import React from 'react';
 import './TaskItem.css';
 import ClockIcon from './ClockIcon';
+import { POMODORO_DURATION_MINUTES } from '../utils/constants';
 
 function TaskItem({ 
   task, 
@@ -30,7 +31,7 @@ function TaskItem({
   // 计算番茄钟显示值
   const getPomodoroDisplay = () => {
     if (task.completed && task.timeSpent > 0) {
-      const timeRatio = task.timeSpent / 25;
+      const timeRatio = task.timeSpent / POMODORO_DURATION_MINUTES;
       const roundedRatio = Math.round(timeRatio * 10) / 10;
       if (roundedRatio === Math.floor(roundedRatio) || (timeRatio * 10) % 1 === 0) {
         return `🍅 x ${roundedRatio}`;
