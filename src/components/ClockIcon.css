@@ -4,7 +4,7 @@
 
 .minute-hand {
   transform-origin: 12px 12px;
-  animation: clockRotate 10s linear infinite;
+  animation: clockRotate 15s linear infinite;
 }
 
 @keyframes clockRotate {
