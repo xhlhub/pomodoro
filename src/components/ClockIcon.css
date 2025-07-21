@@ -1,0 +1,17 @@
+.clock-icon {
+  display: inline-block;
+}
+
+.minute-hand {
+  transform-origin: 12px 12px;
+  animation: clockRotate 10s linear infinite;
+}
+
+@keyframes clockRotate {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+} 
