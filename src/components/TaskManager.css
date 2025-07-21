@@ -13,9 +13,17 @@
   align-items: stretch;
 }
 
-.task-input {
+.task-input-wrapper {
   flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.task-input {
+  width: 100%;
   padding: 12px 15px;
+  padding-right: 80px; /* 为标签留出空间 */
   border: 2px solid #e1e5e9;
   border-radius: 8px;
   font-size: 16px;
@@ -54,38 +62,67 @@
   gap: 15px;
 }
 
-/* 分类选择器样式 */
-.category-selector {
-  position: relative;
-  min-width: 120px;
+/* 分类标签选择器样式 */
+.category-tag-selector {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
 }
 
-.category-dropdown-btn {
-  width: 100%;
-  height: 100%;
-  padding: 12px 15px;
-  border: 2px solid #667eea;
-  border-radius: 8px;
-  background: white;
-  font-size: 16px;
+.category-tag {
+  padding: 6px 10px;
+  border-radius: 15px;
+  background: #667eea;
   cursor: pointer;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   transition: all 0.3s ease;
-  color: #333;
+  color: white;
+  min-height: 28px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
-.category-dropdown-btn:hover {
-  border-color: #e6850e;
-  box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+.category-tag:hover {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.category-tag-text {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-tag-placeholder {
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+}
+
+.category-tag-arrow {
+  font-size: 10px;
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+.category-tag-selector:hover .category-tag-arrow {
+  opacity: 1;
 }
 
 .category-dropdown {
   position: absolute;
   top: 100%;
-  left: 0;
   right: 0;
+  min-width: 150px;
   background: white;
   border: 1px solid #d0d0d0;
   border-radius: 8px;
@@ -260,8 +297,22 @@
     flex-direction: column;
   }
   
-  .category-selector {
-    min-width: auto;
+  .task-input {
+    padding-right: 70px; /* 移动端稍微减少右边距 */
+  }
+  
+  .category-tag {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 24px;
+  }
+  
+  .category-tag-text {
+    font-size: 12px;
+  }
+  
+  .category-dropdown {
+    min-width: 120px;
   }
   
   .category-title {

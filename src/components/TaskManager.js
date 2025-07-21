@@ -86,71 +86,78 @@ function TaskManager({
     <div className="task-section">
       {/* 复合添加任务输入框 */}
       <div className="task-input-container">
-        <input
-          type="text"
-          value={taskInput}
-          onChange={(e) => setTaskInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="输入新任务..."
-          maxLength="50"
-          className="task-input"
-        />
-        
-        {/* 分类选择下拉框 */}
-        <div className="category-selector" ref={dropdownRef}>
-          <button 
-            className="category-dropdown-btn"
-            onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-          >
-            {selectedCategory} <i className="fas fa-chevron-down"></i>
-          </button>
+        <div className="task-input-wrapper">
+          <input
+            type="text"
+            value={taskInput}
+            onChange={(e) => setTaskInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="输入新任务..."
+            maxLength="50"
+            className="task-input"
+          />
           
-          {showCategoryDropdown && (
-            <div className="category-dropdown">
-              {taskCategories.map(category => (
-                <div 
-                  key={category}
-                  className={`category-option ${selectedCategory === category ? 'selected' : ''}`}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    setShowCategoryDropdown(false);
-                  }}
-                >
-                  <span className="category-option-name">{category}</span>
-                  {taskCategories.length > 1 && (
-                    <button 
-                      className="category-option-delete"
-                      onClick={(e) => handleDeleteCategoryFromDropdown(e, category)}
-                      title={`删除分类 "${category}"`}
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-              ))}
-              
-              {/* 简化的添加新分类 */}
-              <div className="add-category-section">
-                <input
-                  type="text"
-                  value={newCategoryInput}
-                  onChange={(e) => setNewCategoryInput(e.target.value)}
-                  className="new-category-input"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddCategory();
-                    }
-                  }}
-                />
-                <button 
-                  className="add-category-btn"
-                  onClick={handleAddCategory}
-                >
-                  +
-                </button>
-              </div>
+          {/* 分类标签选择器 - 在输入框内部 */}
+          <div className="category-tag-selector" ref={dropdownRef}>
+            <div 
+              className="category-tag"
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+            >
+              {selectedCategory ? (
+                <span className="category-tag-text">{selectedCategory}</span>
+              ) : (
+                <span className="category-tag-placeholder"></span>
+              )}
             </div>
-          )}
+            
+            {showCategoryDropdown && (
+              <div className="category-dropdown">
+                {taskCategories.map(category => (
+                  <div 
+                    key={category}
+                    className={`category-option ${selectedCategory === category ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedCategory(category);
+                      setShowCategoryDropdown(false);
+                    }}
+                  >
+                    <span className="category-option-name">{category}</span>
+                    {taskCategories.length > 1 && (
+                      <button 
+                        className="category-option-delete"
+                        onClick={(e) => handleDeleteCategoryFromDropdown(e, category)}
+                        title={`删除分类 "${category}"`}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                
+                {/* 简化的添加新分类 */}
+                <div className="add-category-section">
+                  <input
+                    type="text"
+                    value={newCategoryInput}
+                    onChange={(e) => setNewCategoryInput(e.target.value)}
+                    placeholder="新分类名"
+                    className="new-category-input"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddCategory();
+                      }
+                    }}
+                  />
+                  <button 
+                    className="add-category-btn"
+                    onClick={handleAddCategory}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <button 
