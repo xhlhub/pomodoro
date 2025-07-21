@@ -16,8 +16,10 @@ function App() {
   const [currentTask, setCurrentTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTaskForProgress, setSelectedTaskForProgress] = useState(null);
+  // 为每个任务维护独立的计时器状态
+  const [taskTimerStates, setTaskTimerStates] = useLocalStorage('pomodoro-timer-states', {});
 
-  // 初始化时为旧任务添加新字段
+  // 初始化时为旧任务添加新字段和计时器状态
   useEffect(() => {
     const updatedTasks = tasks.map(task => ({
       ...task,
@@ -27,10 +29,29 @@ function App() {
       timeSpent: task.timeSpent || (task.pomodoroCount * 25)
     }));
     
+    // 为缺少计时器状态的任务添加默认状态
+    const newTimerStates = { ...taskTimerStates };
+    let needsUpdate = false;
+    
+    tasks.forEach(task => {
+      if (!newTimerStates[task.id]) {
+        newTimerStates[task.id] = {
+          timeLeft: 25 * 60,
+          isRunning: false,
+          isPaused: false
+        };
+        needsUpdate = true;
+      }
+    });
+    
     if (JSON.stringify(updatedTasks) !== JSON.stringify(tasks)) {
       setTasks(updatedTasks);
     }
-  }, [tasks, setTasks]);
+    
+    if (needsUpdate) {
+      setTaskTimerStates(newTimerStates);
+    }
+  }, [tasks, setTasks, taskTimerStates, setTaskTimerStates]);
 
   const addTask = useCallback((taskName) => {
     const newTask = {
@@ -44,15 +65,31 @@ function App() {
       createdAt: new Date().toISOString(),
     };
     
+    // 为新任务初始化计时器状态
+    setTaskTimerStates(prev => ({
+      ...prev,
+      [newTask.id]: {
+        timeLeft: 25 * 60, // 25分钟，以秒为单位
+        isRunning: false,
+        isPaused: false
+      }
+    }));
+    
     setTasks(prev => [...prev, newTask]);
-  }, [setTasks]);
+  }, [setTasks, setTaskTimerStates]);
 
   const deleteTask = useCallback((taskId) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
+    // 删除对应的计时器状态
+    setTaskTimerStates(prev => {
+      const newStates = { ...prev };
+      delete newStates[taskId];
+      return newStates;
+    });
     if (currentTask && currentTask.id === taskId) {
       setCurrentTask(null);
     }
-  }, [setTasks, currentTask]);
+  }, [setTasks, setTaskTimerStates, currentTask]);
 
   const updateTaskProgress = useCallback((taskId, progress) => {
     setTasks(prev => prev.map(task => {
@@ -119,6 +156,27 @@ function App() {
     setSelectedTaskForProgress(null);
   }, []);
 
+  // 更新任务计时器状态
+  const updateTaskTimerState = useCallback((taskId, newState) => {
+    setTaskTimerStates(prev => ({
+      ...prev,
+      [taskId]: {
+        ...prev[taskId],
+        ...newState
+      }
+    }));
+  }, [setTaskTimerStates]);
+
+  // 获取当前任务的计时器状态
+  const getCurrentTaskTimerState = useCallback(() => {
+    if (!currentTask) return null;
+    return taskTimerStates[currentTask.id] || {
+      timeLeft: 25 * 60,
+      isRunning: false,
+      isPaused: false
+    };
+  }, [currentTask, taskTimerStates]);
+
   return (
     <div className="App">
       <div className="container">
@@ -136,8 +194,10 @@ function App() {
         {tasks.length > 0 && (
           <Timer
             currentTask={currentTask}
+            timerState={getCurrentTaskTimerState()}
             onComplete={onPomodoroComplete}
             onStop={() => setCurrentTask(null)}
+            onTimerStateUpdate={updateTaskTimerState}
           />
         )}
         

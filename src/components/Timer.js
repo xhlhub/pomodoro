@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Timer.css';
 
-function Timer({ currentTask, onComplete, onStop }) {
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25分钟，以秒为单位
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate }) {
   const timerRef = useRef(null);
   const clockSoundRef = useRef(null);
   const cheersSoundRef = useRef(null);
+  
+  // 从传入的状态中获取计时器数据
+  const timeLeft = timerState?.timeLeft || 25 * 60;
+  const isRunning = timerState?.isRunning || false;
+  const isPaused = timerState?.isPaused || false;
 
   // 初始化音效
   useEffect(() => {
@@ -17,34 +19,31 @@ function Timer({ currentTask, onComplete, onStop }) {
 
   // 计时器逻辑
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
+    if (isRunning && timeLeft > 0 && currentTask) {
       timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            // 计时结束
-            setIsRunning(false);
-            setIsPaused(false);
-            completePomodoro();
-            return 25 * 60; // 重置为25分钟
-          }
-          return prev - 1;
-        });
+        if (timeLeft <= 1) {
+          // 计时结束
+          onTimerStateUpdate(currentTask.id, {
+            timeLeft: 25 * 60, // 重置为25分钟
+            isRunning: false,
+            isPaused: false
+          });
+          completePomodoro();
+        } else {
+          // 减少时间
+          onTimerStateUpdate(currentTask.id, {
+            timeLeft: timeLeft - 1
+          });
+        }
       }, 1000);
     } else {
       clearInterval(timerRef.current);
     }
 
     return () => clearInterval(timerRef.current);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, currentTask, onTimerStateUpdate]);
 
-  // 当前任务改变时重置计时器
-  useEffect(() => {
-    if (currentTask) {
-      setTimeLeft(25 * 60);
-      setIsRunning(false);
-      setIsPaused(false);
-    }
-  }, [currentTask]);
+
 
   const completePomodoro = useCallback(() => {
     // 播放完成音效
@@ -87,8 +86,10 @@ function Timer({ currentTask, onComplete, onStop }) {
   const startPomodoro = () => {
     if (!currentTask) return;
 
-    setIsRunning(true);
-    setIsPaused(false);
+    onTimerStateUpdate(currentTask.id, {
+      isRunning: true,
+      isPaused: false
+    });
 
     // 播放开始音效
     if (clockSoundRef.current) {
@@ -97,19 +98,31 @@ function Timer({ currentTask, onComplete, onStop }) {
   };
 
   const pausePomodoro = () => {
-    setIsRunning(false);
-    setIsPaused(true);
+    if (!currentTask) return;
+    
+    onTimerStateUpdate(currentTask.id, {
+      isRunning: false,
+      isPaused: true
+    });
   };
 
   const resumePomodoro = () => {
-    setIsRunning(true);
-    setIsPaused(false);
+    if (!currentTask) return;
+    
+    onTimerStateUpdate(currentTask.id, {
+      isRunning: true,
+      isPaused: false
+    });
   };
 
   const stopPomodoro = () => {
-    setIsRunning(false);
-    setIsPaused(false);
-    setTimeLeft(25 * 60);
+    if (!currentTask) return;
+    
+    onTimerStateUpdate(currentTask.id, {
+      isRunning: false,
+      isPaused: false,
+      timeLeft: 25 * 60
+    });
     onStop();
   };
 
@@ -119,7 +132,7 @@ function Timer({ currentTask, onComplete, onStop }) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  if (!currentTask) {
+  if (!currentTask || !timerState) {
     return null;
   }
 
