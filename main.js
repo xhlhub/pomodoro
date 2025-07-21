@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, Notification } = require("electron");
 const path = require("path");
+const isDev = !app.isPackaged;
 
 let mainWindow;
 
@@ -14,14 +15,24 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
+      webSecurity: false // 允许加载本地资源
     },
     icon: path.join(__dirname, "icon.ico"),
     title: "Pomodoro for Her",
     show: false,
   });
 
-  // 加载应用的 index.html
-  mainWindow.loadFile("index.html");
+  // 根据环境加载不同的URL
+  const startUrl = isDev 
+    ? 'http://localhost:3000' 
+    : `file://${path.join(__dirname, './build/index.html')}`;
+  
+  mainWindow.loadURL(startUrl);
+
+  // 开发模式下打开开发者工具
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   // 当窗口准备好显示时显示窗口
   mainWindow.once("ready-to-show", () => {

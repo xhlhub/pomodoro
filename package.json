@@ -1,36 +1,49 @@
 {
   "name": "pomodoro-for-her",
   "version": "1.0.0",
-  "description": "A beautiful Pomodoro timer desktop application",
+  "description": "A beautiful Pomodoro timer desktop application built with React and Electron",
   "main": "main.js",
+  "homepage": "./",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder",
-    "dev": "electron . --dev"
+    "dev": "concurrently \"npm run react-dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "react-dev": "react-scripts start",
+    "react-build": "react-scripts build",
+    "build": "npm run react-build && electron-builder",
+    "dist": "npm run react-build && electron-builder"
   },
   "keywords": [
     "pomodoro",
     "timer",
     "productivity",
-    "electron"
+    "electron",
+    "react"
   ],
   "author": "Your Name",
   "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
   "devDependencies": {
     "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
+    "electron-builder": "^24.9.1",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
   },
   "build": {
     "appId": "com.pomodoro.love",
     "productName": "Pomodoro for Her",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "files": [
       "main.js",
-      "index.html",
-      "styles.css",
-      "script.js",
+      "build/**/*",
+      "audio/**/*",
+      "icon.ico",
       "package.json"
     ],
     "win": {
@@ -52,5 +65,17 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Pomodoro for Her"
     }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
