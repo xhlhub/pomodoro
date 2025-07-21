@@ -34,7 +34,6 @@
   },
   "build": {
     "extends": null,
-    "main": "main.js",
     "appId": "com.pomodoro.love",
     "productName": "Pomodoro for Her",
     "directories": {
