@@ -1,15 +1,15 @@
 .task-section {
   background: white;
-  border-radius: 15px;
-  padding: 25px;
-  margin-bottom: 25px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .task-input-container {
   display: flex;
-  gap: 10px;
-  margin-bottom: 25px;
+  gap: 8px;
+  margin-bottom: 18px;
   align-items: stretch;
 }
 
@@ -22,11 +22,11 @@
 
 .task-input {
   width: 100%;
-  padding: 12px 15px;
-  padding-right: 80px; /* 为标签留出空间 */
+  padding: 10px 12px;
+  padding-right: 75px; /* 为标签留出空间 */
   border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 14px;
   transition: border-color 0.3s ease;
 }
 
@@ -36,14 +36,18 @@
 }
 
 .btn {
-  padding: 12px 20px;
+  padding: 10px 12px;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 100px;
+  min-width: 75px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary {
@@ -59,21 +63,21 @@
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
 }
 
 /* 分类标签选择器样式 */
 .category-tag-selector {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
 }
 
 .category-tag {
-  padding: 6px 10px;
-  border-radius: 15px;
+  padding: 5px 8px;
+  border-radius: 12px;
   background: #667eea;
   cursor: pointer;
   display: flex;
@@ -81,35 +85,35 @@
   align-items: center;
   transition: all 0.3s ease;
   color: white;
-  min-height: 28px;
-  gap: 6px;
+  min-height: 24px;
+  gap: 5px;
   white-space: nowrap;
 }
 
 .category-tag:hover {
   background: #5a6fd8;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
 }
 
 .category-tag-text {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
-  max-width: 50px;
+  max-width: 45px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .category-tag-placeholder {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 50%;
 }
 
 .category-tag-arrow {
-  font-size: 10px;
+  font-size: 9px;
   opacity: 0.8;
   transition: transform 0.3s ease;
 }
@@ -122,21 +126,21 @@
   position: absolute;
   top: 100%;
   right: 0;
-  min-width: 150px;
+  min-width: 140px;
   background: white;
   border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   margin-top: 2px;
   overflow: hidden;
 }
 
 .category-option {
-  padding: 10px 15px;
+  padding: 8px 12px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  font-size: 14px;
+  font-size: 13px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -162,11 +166,11 @@
   border: none;
   color: #dc3545;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: 3px;
-  font-size: 12px;
+  font-size: 11px;
   transition: all 0.2s ease;
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 .category-option:hover .category-option-delete {
@@ -189,22 +193,22 @@
 
 .add-category-section {
   border-top: 1px solid #e1e5e9;
-  padding: 8px 8px;
+  padding: 6px 6px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   background-color: #fafafa;
 }
 
 .new-category-input {
   flex: 1;
-  padding: 4px 6px;
+  padding: 3px 5px;
   border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  font-size: 13px;
-  height: 30px;
+  border-radius: 3px;
+  font-size: 12px;
+  height: 26px;
   background: white;
   min-width: 0; /* 防止flex子元素超出容器 */
-  max-width: 150px; /* 限制最大宽度 */
+  max-width: 130px; /* 限制最大宽度 */
 }
 
 .new-category-input:focus {
@@ -213,12 +217,12 @@
 }
 
 .add-category-btn {
-  padding: 0px 4px;
+  padding: 0px 3px;
   background: transparent;
   color: #667eea;
   border: none;
-  border-radius: 4px;
-  font-size: 24px;
+  border-radius: 3px;
+  font-size: 20px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -226,30 +230,30 @@
 }
 
 .add-task-btn {
-  min-width: 120px;
+  min-width: 100px;
 }
 
 /* 分类组显示样式 */
 .task-categories {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 18px;
 }
 
 .task-category-group {
   background: white;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   /* border: 1px solid #f0f0f0; */
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .category-title {
   background: none;
   color: #333;
-  padding: 12px 0px 8px 0px;
-  margin: 0 20px;
-  font-size: 16px;
+  padding: 10px 0px 6px 0px;
+  margin: 0 15px;
+  font-size: 14px;
   font-weight: 600;
   display: flex;
   justify-content: space-between;
@@ -263,7 +267,7 @@
   position: absolute;
   bottom: -2px;
   left: 0;
-  width: 60px;
+  width: 50px;
   height: 2px;
   background: linear-gradient(90deg, #667eea, #764ba2);
   border-radius: 1px;
@@ -271,13 +275,13 @@
 }
 
 .category-title:hover::after {
-  width: 100px;
+  width: 80px;
 }
 
 .category-title-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .category-title-content i {
@@ -289,11 +293,11 @@
   border: none;
   color: white;
   cursor: pointer;
-  padding: 5px;
+  padding: 4px;
   border-radius: 3px;
   opacity: 0.7;
   transition: opacity 0.2s ease;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .category-delete-btn:hover {
@@ -304,15 +308,15 @@
 .task-count {
   background: #f8f9fa;
   color: #6c757d;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 13px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 500;
   border: 1px solid #e9ecef;
 }
 
 .task-category-group .task-list {
-  padding: 15px 20px 20px 20px;
+  padding: 12px 15px 15px 15px;
   background: white;
   margin: 0;
 }
@@ -324,30 +328,30 @@
   }
   
   .task-input {
-    padding-right: 70px; /* 移动端稍微减少右边距 */
+    padding-right: 65px; /* 移动端稍微减少右边距 */
   }
   
   .category-tag {
-    padding: 4px 8px;
-    font-size: 12px;
-    min-height: 24px;
+    padding: 3px 6px;
+    font-size: 11px;
+    min-height: 20px;
   }
   
   .category-tag-text {
-    font-size: 12px;
+    font-size: 11px;
   }
   
   .category-dropdown {
-    min-width: 120px;
+    min-width: 110px;
   }
   
   .category-title {
-    font-size: 15px;
-    padding: 10px 0px 6px 0px;
-    margin: 0 15px;
+    font-size: 13px;
+    padding: 8px 0px 5px 0px;
+    margin: 0 12px;
   }
   
   .task-category-group .task-list {
-    padding: 12px 15px 15px 15px;
+    padding: 10px 12px 12px 12px;
   }
 } 

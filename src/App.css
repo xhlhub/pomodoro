@@ -3,14 +3,14 @@
 }
 
 .container {
-  max-width: 900px;
+  max-width: 750px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 15px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .container {
-    padding: 15px;
+    padding: 10px;
   }
 } 
