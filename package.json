@@ -33,6 +33,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
+    "extends": null,
+    "main": "main.js",
     "appId": "com.pomodoro.love",
     "productName": "Pomodoro for Her",
     "directories": {
