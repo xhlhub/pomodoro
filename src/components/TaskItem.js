@@ -5,6 +5,7 @@ function TaskItem({
   task, 
   index, 
   isActive, 
+  isRunning,
   onStartPomodoro, 
   onDelete, 
   onOpenProgressModal 
@@ -47,7 +48,13 @@ function TaskItem({
       onClick={handleClick}
     >
       <div className="task-info">
-        <div className="task-number">{index + 1}</div>
+        <div className="task-number">
+          {isRunning ? (
+            <i className="fas fa-hourglass-half" style={{color: 'white'}}></i>
+          ) : (
+            index + 1
+          )}
+        </div>
         <div className="task-details">
           <span className="task-name">{task.name}</span>
           <span className="task-date">{task.date}</span>

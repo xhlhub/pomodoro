@@ -8,7 +8,8 @@ function TaskManager({
   onAddTask, 
   onDeleteTask, 
   onStartPomodoro, 
-  onOpenProgressModal 
+  onOpenProgressModal,
+  isTaskRunning
 }) {
   const [taskInput, setTaskInput] = useState('');
 
@@ -54,6 +55,7 @@ function TaskManager({
             task={task}
             index={index}
             isActive={currentTask && currentTask.id === task.id}
+            isRunning={isTaskRunning(task.id)}
             onStartPomodoro={onStartPomodoro}
             onDelete={onDeleteTask}
             onOpenProgressModal={onOpenProgressModal}
