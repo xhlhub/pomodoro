@@ -8,8 +8,9 @@
 
 .task-input-container {
   display: flex;
-  gap: 15px;
+  gap: 10px;
   margin-bottom: 25px;
+  align-items: stretch;
 }
 
 .task-input {
@@ -53,9 +54,218 @@
   gap: 15px;
 }
 
+/* 分类选择器样式 */
+.category-selector {
+  position: relative;
+  min-width: 120px;
+}
+
+.category-dropdown-btn {
+  width: 100%;
+  height: 100%;
+  padding: 12px 15px;
+  border: 2px solid #ff9500;
+  border-radius: 8px;
+  background: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.category-dropdown-btn:hover {
+  border-color: #e6850e;
+  box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+}
+
+.category-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.category-option {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.category-option:hover {
+  background-color: #f0f0f0;
+}
+
+.category-option.selected {
+  background-color: #667eea;
+  color: white;
+}
+
+.category-option-name {
+  flex: 1;
+}
+
+.category-option-delete {
+  opacity: 0;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.category-option:hover .category-option-delete {
+  opacity: 1;
+}
+
+.category-option-delete:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.category-option.selected .category-option-delete {
+  color: white;
+}
+
+.category-option.selected .category-option-delete:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.add-category-section {
+  border-top: 1px solid #e1e5e9;
+  padding: 8px 8px;
+  display: flex;
+  gap: 8px;
+  background-color: #fafafa;
+}
+
+.new-category-input {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 13px;
+  height: 30px;
+  background: white;
+  min-width: 0; /* 防止flex子元素超出容器 */
+  max-width: 150px; /* 限制最大宽度 */
+}
+
+.new-category-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.add-category-btn {
+  padding: 0px 4px;
+  background: transparent;
+  color: #667eea;
+  border: none;
+  border-radius: 4px;
+  font-size: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.add-task-btn {
+  min-width: 120px;
+}
+
+/* 分类组显示样式 */
+.task-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.task-category-group {
+  background: #f8f9fa;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.category-title {
+  background: #667eea;
+  color: white;
+  padding: 15px 20px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-title-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-delete-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 3px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  font-size: 14px;
+}
+
+.category-delete-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.task-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.task-category-group .task-list {
+  padding: 15px;
+  background: white;
+  margin: 0;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .task-input-container {
     flex-direction: column;
+  }
+  
+  .category-selector {
+    min-width: auto;
+  }
+  
+  .category-title {
+    font-size: 16px;
+    padding: 12px 15px;
   }
 } 

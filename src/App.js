@@ -19,6 +19,8 @@ function App() {
   const [selectedTaskForProgress, setSelectedTaskForProgress] = useState(null);
   // 为每个任务维护独立的计时器状态
   const [taskTimerStates, setTaskTimerStates] = useLocalStorage('pomodoro-timer-states', {});
+  // 任务分类管理
+  const [taskCategories, setTaskCategories] = useLocalStorage('pomodoro-categories', ['生活', '工作']);
   
   // 全局计时器引用
   const globalTimerRef = useRef(null);
@@ -30,7 +32,8 @@ function App() {
       progress: task.progress || 0,
       date: task.date || getCurrentDateString(),
       createdAt: task.createdAt || new Date().toISOString(),
-      timeSpent: task.timeSpent || (task.pomodoroCount * POMODORO_DURATION_MINUTES)
+      timeSpent: task.timeSpent || (task.pomodoroCount * POMODORO_DURATION_MINUTES),
+      category: task.category || '生活'  // 为旧任务添加默认分类
     }));
     
     // 为缺少计时器状态的任务添加默认状态
@@ -174,10 +177,11 @@ function App() {
     return () => clearInterval(globalTimerRef.current);
   }, [onPomodoroComplete, setTasks]); // 移除taskTimerStates依赖
 
-  const addTask = useCallback((taskName) => {
+  const addTask = useCallback((taskName, category = '生活') => {
     const newTask = {
       id: Date.now(),
       name: taskName,
+      category: category,
       completed: false,
       pomodoroCount: 0,
       timeSpent: 0,
@@ -198,6 +202,27 @@ function App() {
     
     setTasks(prev => [...prev, newTask]);
   }, [setTasks, setTaskTimerStates]);
+
+  // 分类管理函数
+  const addCategory = useCallback((categoryName) => {
+    if (categoryName.trim() && !taskCategories.includes(categoryName.trim())) {
+      setTaskCategories(prev => [...prev, categoryName.trim()]);
+    }
+  }, [taskCategories, setTaskCategories]);
+
+  const deleteCategory = useCallback((categoryName) => {
+    if (taskCategories.length > 1) { // 至少保留一个分类
+      setTaskCategories(prev => prev.filter(cat => cat !== categoryName));
+      // 将该分类下的所有任务移动到第一个分类
+      const remainingCategories = taskCategories.filter(cat => cat !== categoryName);
+      const defaultCategory = remainingCategories[0];
+      setTasks(prev => prev.map(task => 
+        task.category === categoryName 
+          ? { ...task, category: defaultCategory }
+          : task
+      ));
+    }
+  }, [taskCategories, setTaskCategories, setTasks]);
 
   const deleteTask = useCallback((taskId) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
@@ -363,10 +388,13 @@ function App() {
         <TaskManager
           tasks={tasks}
           currentTask={currentTask}
+          taskCategories={taskCategories}
           onAddTask={addTask}
           onDeleteTask={deleteTask}
           onStartPomodoro={startTaskPomodoro}
           onOpenProgressModal={openProgressModal}
+          onAddCategory={addCategory}
+          onDeleteCategory={deleteCategory}
           isTaskRunning={isTaskRunning}
         />
         
