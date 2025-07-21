@@ -175,8 +175,7 @@ function TaskManager({
             <div key={category} className="task-category-group">
               <h3 className="category-title">
                 <span className="category-title-content">
-                  <i className="fas fa-folder"></i> {category} 
-                  <span className="task-count">({groupedTasks[category].length})</span>
+                  {category} 
                 </span>
               </h3>
               <div className="task-list">
