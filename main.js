@@ -2,8 +2,15 @@ const { app, BrowserWindow, ipcMain, Notification } = require("electron");
 const path = require("path");
 const isDev = !app.isPackaged;
 
-// 番茄钟时间常量（与src/utils/constants.js保持同步）
-const POMODORO_DURATION_MINUTES = 25;
+// 应用配置 - 统一配置源
+const APP_CONFIG = {
+  POMODORO_DURATION_MINUTES: 1,
+  BREAK_DURATION_MINUTES: 5,
+  LONG_BREAK_DURATION_MINUTES: 15
+};
+
+// 向下兼容
+const POMODORO_DURATION_MINUTES = APP_CONFIG.POMODORO_DURATION_MINUTES;
 
 let mainWindow;
 
@@ -81,6 +88,11 @@ ipcMain.on("pomodoro-complete", (event, taskName) => {
       notification.close();
     }, 5000);
   }
+});
+
+// 处理配置请求 - 让渲染进程获取配置
+ipcMain.on("get-app-config", (event) => {
+  event.returnValue = APP_CONFIG;
 });
 
 // 处理番茄钟开始通知

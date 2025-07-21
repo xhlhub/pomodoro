@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Timer.css';
-import { POMODORO_DURATION_SECONDS } from '../utils/constants';
+import { POMODORO_DURATION_SECONDS } from '../config/appConfig';
 
 function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate, onPauseOtherTasks, onStartTaskTimer }) {
   const clockSoundRef = useRef(null);

@@ -7,7 +7,7 @@ import Stats from './components/Stats';
 import ProgressModal from './components/ProgressModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getCurrentDateString } from './utils/dateUtils';
-import { POMODORO_DURATION_SECONDS, POMODORO_DURATION_MINUTES } from './utils/constants';
+import { POMODORO_DURATION_SECONDS, POMODORO_DURATION_MINUTES } from './config/appConfig';
 
 const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
 

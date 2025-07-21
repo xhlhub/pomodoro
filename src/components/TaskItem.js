@@ -1,7 +1,7 @@
 import React from 'react';
 import './TaskItem.css';
 import ClockIcon from './ClockIcon';
-import { POMODORO_DURATION_MINUTES } from '../utils/constants';
+import { POMODORO_DURATION_MINUTES } from '../config/appConfig';
 
 function TaskItem({ 
   task, 
