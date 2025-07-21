@@ -4,9 +4,9 @@ const isDev = !app.isPackaged;
 
 // 应用配置 - 统一配置源
 const APP_CONFIG = {
-  POMODORO_DURATION_MINUTES: 2,
+  POMODORO_DURATION_MINUTES: 25,
   BREAK_DURATION_MINUTES: 5,
-  LONG_BREAK_DURATION_MINUTES: 15
+  LONG_BREAK_DURATION_MINUTES: 15,
 };
 
 // 向下兼容
@@ -25,7 +25,7 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
-      webSecurity: false // 允许加载本地资源
+      webSecurity: false, // 允许加载本地资源
     },
     icon: path.join(__dirname, "icon.ico"),
     title: "Pomodoro for Her",
@@ -33,10 +33,10 @@ function createWindow() {
   });
 
   // 根据环境加载不同的URL
-  const startUrl = isDev 
-    ? 'http://localhost:3000' 
-    : `file://${path.join(__dirname, './build/index.html')}`;
-  
+  const startUrl = isDev
+    ? "http://localhost:3000"
+    : `file://${path.join(__dirname, "./build/index.html")}`;
+
   mainWindow.loadURL(startUrl);
 
   // 开发模式下打开开发者工具
