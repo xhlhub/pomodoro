@@ -42,10 +42,7 @@ export interface TaskManagerProps {
 export interface TimerProps {
   currentTask: Task | null;
   timerState: TimerState | null;
-  onComplete: (taskId: number) => void;
-  onStop: () => void;
   onTimerStateUpdate: (taskId: number, newState: Partial<TimerState>) => void;
-  onPauseOtherTasks: (excludeTaskId: number) => void;
   onStartTaskTimer: (taskId: number, newState: Partial<TimerState>) => void;
 }
 

@@ -6,10 +6,7 @@ import { TimerProps } from '../types';
 const Timer: React.FC<TimerProps> = ({ 
   currentTask, 
   timerState, 
-  onComplete, 
-  onStop, 
   onTimerStateUpdate, 
-  onPauseOtherTasks, 
   onStartTaskTimer 
 }) => {
   const clockSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -64,17 +61,6 @@ const Timer: React.FC<TimerProps> = ({
     });
   };
 
-  const stopPomodoro = (): void => {
-    if (!currentTask) return;
-    
-    onTimerStateUpdate(currentTask.id, {
-      isRunning: false,
-      isPaused: false,
-      timeLeft: POMODORO_DURATION_SECONDS
-    });
-    onStop();
-  };
-
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -122,12 +108,12 @@ const Timer: React.FC<TimerProps> = ({
           </button>
         )}
         
-        <button 
+        {/* <button 
           className="btn btn-danger" 
           onClick={stopPomodoro}
         >
           <i className="fas fa-stop"></i> 停止
-        </button>
+        </button> */}
       </div>
 
       <div className="current-task">

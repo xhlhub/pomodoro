@@ -293,34 +293,6 @@ const App: React.FC = () => {
     return timerState ? timerState.isRunning : false;
   }, [taskTimerStates]);
 
-  // 暂停除指定任务外的所有正在运行的任务
-  const pauseOtherRunningTasks = useCallback((excludeTaskId: number): void => {
-    console.log('pauseOtherRunningTasks 被调用，排除任务ID:', excludeTaskId);
-    console.log('当前任务状态:', taskTimerStates);
-    
-    const updatedTimerStates = { ...taskTimerStates };
-    let hasChanges = false;
-    
-    Object.keys(updatedTimerStates).forEach(id => {
-      if (parseInt(id) !== excludeTaskId && updatedTimerStates[id].isRunning) {
-        console.log(`暂停任务 ${id}, 当前状态:`, updatedTimerStates[id]);
-        updatedTimerStates[id] = {
-          ...updatedTimerStates[id],
-          isRunning: false,
-          isPaused: true
-        };
-        hasChanges = true;
-      }
-    });
-    
-    if (hasChanges) {
-      console.log('更新后的状态:', updatedTimerStates);
-      setTaskTimerStates(updatedTimerStates);
-    } else {
-      console.log('没有需要暂停的任务');
-    }
-  }, [taskTimerStates, setTaskTimerStates]);
-
   // 原子操作：暂停其他任务并启动当前任务
   const startTaskTimer = useCallback((taskId: number, newState: Partial<TimerState>): void => {
     console.log('startTaskTimer 被调用，任务ID:', taskId, '新状态:', newState);
@@ -374,10 +346,7 @@ const App: React.FC = () => {
           <Timer
             currentTask={currentTask}
             timerState={getCurrentTaskTimerState()}
-            onComplete={onPomodoroComplete}
-            onStop={() => setCurrentTask(null)}
             onTimerStateUpdate={updateTaskTimerState}
-            onPauseOtherTasks={pauseOtherRunningTasks}
             onStartTaskTimer={startTaskTimer}
           />
         )}
