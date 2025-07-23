@@ -31,9 +31,12 @@ const TaskItem: React.FC<TaskItemProps> = ({
 
   // 计算番茄钟显示值
   const getPomodoroDisplay = (): string => {
+    console.log('task.timeSpent', task.timeSpent);
     if (task.completed && task.timeSpent > 0) {
       // 任务完成时：显示实际花费时间的番茄钟比例（支持小数）
-      const timeRatio = task.timeSpent / POMODORO_DURATION_MINUTES;
+      // timeSpent现在是秒，需要转换为分钟再计算比例
+      const timeInMinutes = task.timeSpent / 60;
+      const timeRatio = timeInMinutes / POMODORO_DURATION_MINUTES;
       const roundedRatio = Math.round(timeRatio * 10) / 10;
       return `🍅 x ${roundedRatio}`;
     } else if (!task.completed && task.pomodoroCount > 0) {

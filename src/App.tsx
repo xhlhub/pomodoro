@@ -35,41 +35,6 @@ const App: React.FC = () => {
   // 全局计时器引用
   const globalTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 初始化时为旧任务添加新字段和计时器状态
-  useEffect(() => {
-    const updatedTasks: Task[] = tasks.map(task => ({
-      ...task,
-      progress: task.progress || 0,
-      date: task.date || getCurrentDateString(),
-      createdAt: task.createdAt || new Date().toISOString(),
-      timeSpent: task.timeSpent || (task.pomodoroCount * POMODORO_DURATION_MINUTES),
-      category: task.category || '生活'  // 为旧任务添加默认分类
-    }));
-    
-    // 为缺少计时器状态的任务添加默认状态
-    const newTimerStates: TaskTimerStates = { ...taskTimerStates };
-    let needsUpdate = false;
-    
-    tasks.forEach(task => {
-      if (!newTimerStates[task.id]) {
-        newTimerStates[task.id] = {
-          timeLeft: POMODORO_DURATION_SECONDS,
-          isRunning: false,
-          isPaused: false
-        };
-        needsUpdate = true;
-      }
-    });
-    
-    if (JSON.stringify(updatedTasks) !== JSON.stringify(tasks)) {
-      setTasks(updatedTasks);
-    }
-    
-    if (needsUpdate) {
-      setTaskTimerStates(newTimerStates);
-    }
-  }, [tasks, setTasks, taskTimerStates, setTaskTimerStates]);
-
   const onPomodoroComplete = useCallback((taskId: number): void => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
@@ -168,14 +133,12 @@ const App: React.FC = () => {
         return hasTimerChanges ? newStates : prev;
       });
 
-      // 为所有正在运行的任务更新timeSpent（每秒增加1/60分钟）
+      // 为所有正在运行的任务更新timeSpent（每秒增加1秒）
       if (runningTaskIds.length > 0) {
-        const secondsToMinutes = Math.round((1 / 60) * 10000) / 10000; // 1秒 = 1/60分钟，保留4位小数精度
-        
         setTasks(prevTasks => 
           prevTasks.map(task => 
             runningTaskIds.includes(task.id.toString()) 
-              ? { ...task, timeSpent: Math.round((task.timeSpent + secondsToMinutes) * 10000) / 10000 }
+              ? { ...task, timeSpent: task.timeSpent + 1 }
               : task
           )
         );
