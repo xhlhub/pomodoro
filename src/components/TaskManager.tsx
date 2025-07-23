@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import TaskItem from './TaskItem';
 import './TaskManager.css';
+import { TaskManagerProps, Task } from '../types';
 
-function TaskManager({ 
+const TaskManager: React.FC<TaskManagerProps> = ({ 
   tasks, 
   currentTask, 
   taskCategories,
@@ -13,12 +14,12 @@ function TaskManager({
   onAddCategory,
   onDeleteCategory,
   isTaskRunning
-}) {
-  const [taskInput, setTaskInput] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(taskCategories[0] || '生活');
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [newCategoryInput, setNewCategoryInput] = useState('');
-  const dropdownRef = useRef(null);
+}) => {
+  const [taskInput, setTaskInput] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>(taskCategories[0] || '生活');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState<boolean>(false);
+  const [newCategoryInput, setNewCategoryInput] = useState<string>('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 处理分类变化时的默认选择
   useEffect(() => {
@@ -29,8 +30,8 @@ function TaskManager({
 
   // 点击外部关闭下拉框
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowCategoryDropdown(false);
       }
     };
@@ -41,7 +42,7 @@ function TaskManager({
     };
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     const taskName = taskInput.trim();
     if (taskName) {
@@ -50,13 +51,13 @@ function TaskManager({
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
-      handleSubmit(e);
+      handleSubmit(e as any);
     }
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = (): void => {
     const categoryName = newCategoryInput.trim();
     if (categoryName) {
       onAddCategory(categoryName);
@@ -64,23 +65,23 @@ function TaskManager({
     }
   };
 
-  const handleDeleteCategory = (categoryName) => {
+  const handleDeleteCategory = (categoryName: string): void => {
     onDeleteCategory(categoryName);
     if (selectedCategory === categoryName) {
       setSelectedCategory(taskCategories.filter(cat => cat !== categoryName)[0] || '生活');
     }
   };
 
-  const handleDeleteCategoryFromDropdown = (e, categoryName) => {
+  const handleDeleteCategoryFromDropdown = (e: React.MouseEvent<HTMLButtonElement>, categoryName: string): void => {
     e.stopPropagation(); // 阻止事件冒泡，避免触发选择分类
     handleDeleteCategory(categoryName);
   };
 
   // 按分类分组任务
-  const groupedTasks = taskCategories.reduce((groups, category) => {
+  const groupedTasks: Record<string, Task[]> = taskCategories.reduce((groups, category) => {
     groups[category] = tasks.filter(task => task.category === category);
     return groups;
-  }, {});
+  }, {} as Record<string, Task[]>);
 
   return (
     <div className="task-section">
@@ -93,7 +94,7 @@ function TaskManager({
             onChange={(e) => setTaskInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="输入新任务..."
-            maxLength="50"
+            maxLength={50}
             className="task-input"
           />
           
@@ -184,7 +185,7 @@ function TaskManager({
                     key={task.id}
                     task={task}
                     index={index}
-                    isActive={currentTask && currentTask.id === task.id}
+                    isActive={currentTask ? currentTask.id === task.id : false}
                     isRunning={isTaskRunning(task.id)}
                     onStartPomodoro={onStartPomodoro}
                     onDelete={onDeleteTask}
@@ -198,6 +199,6 @@ function TaskManager({
       </div>
     </div>
   );
-}
+};
 
 export default TaskManager; 

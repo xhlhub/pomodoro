@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Timer.css';
 import { POMODORO_DURATION_SECONDS } from '../config/appConfig';
+import { TimerProps } from '../types';
 
-function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate, onPauseOtherTasks, onStartTaskTimer }) {
-  const clockSoundRef = useRef(null);
+const Timer: React.FC<TimerProps> = ({ 
+  currentTask, 
+  timerState, 
+  onComplete, 
+  onStop, 
+  onTimerStateUpdate, 
+  onPauseOtherTasks, 
+  onStartTaskTimer 
+}) => {
+  const clockSoundRef = useRef<HTMLAudioElement | null>(null);
   
   // 从传入的状态中获取计时器数据
   const timeLeft = timerState?.timeLeft || POMODORO_DURATION_SECONDS;
@@ -17,7 +26,7 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
 
   // 移除了本地计时逻辑，现在使用全局计时器
 
-  const startPomodoro = () => {
+  const startPomodoro = (): void => {
     if (!currentTask) return;
 
     console.log('开始番茄钟，当前任务:', currentTask);
@@ -34,7 +43,7 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
     }
   };
 
-  const pausePomodoro = () => {
+  const pausePomodoro = (): void => {
     if (!currentTask) return;
     
     onTimerStateUpdate(currentTask.id, {
@@ -43,7 +52,7 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
     });
   };
 
-  const resumePomodoro = () => {
+  const resumePomodoro = (): void => {
     if (!currentTask) return;
     
     console.log('继续番茄钟，当前任务:', currentTask);
@@ -55,7 +64,7 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
     });
   };
 
-  const stopPomodoro = () => {
+  const stopPomodoro = (): void => {
     if (!currentTask) return;
     
     onTimerStateUpdate(currentTask.id, {
@@ -66,7 +75,7 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
     onStop();
   };
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -126,6 +135,6 @@ function Timer({ currentTask, timerState, onComplete, onStop, onTimerStateUpdate
       </div>
     </div>
   );
-}
+};
 
 export default Timer; 

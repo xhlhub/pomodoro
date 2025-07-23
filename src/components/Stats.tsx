@@ -1,7 +1,8 @@
 import React from 'react';
 import './Stats.css';
+import { StatsProps } from '../types';
 
-function Stats({ completedPomodoros, totalTime }) {
+const Stats: React.FC<StatsProps> = ({ completedPomodoros, totalTime }) => {
   return (
     <div className="stats-section">
       <div className="stats-card">
@@ -23,6 +24,6 @@ function Stats({ completedPomodoros, totalTime }) {
       </div>
     </div>
   );
-}
+};
 
 export default Stats; 

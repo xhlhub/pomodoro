@@ -1,20 +1,28 @@
-const { app, BrowserWindow, ipcMain, Notification } = require("electron");
-const path = require("path");
-const isDev = !app.isPackaged;
+import { app, BrowserWindow, ipcMain, Notification, IpcMainEvent } from "electron";
+import * as path from "path";
+
+const isDev: boolean = !app.isPackaged;
+
+// 应用配置接口
+interface AppConfig {
+  POMODORO_DURATION_MINUTES: number;
+  BREAK_DURATION_MINUTES: number;
+  LONG_BREAK_DURATION_MINUTES: number;
+}
 
 // 应用配置 - 统一配置源
-const APP_CONFIG = {
+const APP_CONFIG: AppConfig = {
   POMODORO_DURATION_MINUTES: 25,
   BREAK_DURATION_MINUTES: 5,
   LONG_BREAK_DURATION_MINUTES: 15,
 };
 
 // 向下兼容
-const POMODORO_DURATION_MINUTES = APP_CONFIG.POMODORO_DURATION_MINUTES;
+const POMODORO_DURATION_MINUTES: number = APP_CONFIG.POMODORO_DURATION_MINUTES;
 
-let mainWindow;
+let mainWindow: BrowserWindow | null;
 
-function createWindow() {
+function createWindow(): void {
   // 创建浏览器窗口
   mainWindow = new BrowserWindow({
     width: 800,
@@ -24,7 +32,6 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
       webSecurity: false, // 允许加载本地资源
     },
     icon: path.join(__dirname, "icon.ico"),
@@ -33,7 +40,7 @@ function createWindow() {
   });
 
   // 根据环境加载不同的URL
-  const startUrl = isDev
+  const startUrl: string = isDev
     ? "http://localhost:3000"
     : `file://${path.join(__dirname, "./build/index.html")}`;
 
@@ -46,7 +53,9 @@ function createWindow() {
 
   // 当窗口准备好显示时显示窗口
   mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
+    if (mainWindow) {
+      mainWindow.show();
+    }
   });
 
   // 当窗口关闭时触发
@@ -72,7 +81,7 @@ app.on("activate", () => {
 });
 
 // 处理番茄钟完成通知
-ipcMain.on("pomodoro-complete", (event, taskName) => {
+ipcMain.on("pomodoro-complete", (event: IpcMainEvent, taskName: string) => {
   if (Notification.isSupported()) {
     const notification = new Notification({
       title: "番茄钟完成！",
@@ -91,12 +100,12 @@ ipcMain.on("pomodoro-complete", (event, taskName) => {
 });
 
 // 处理配置请求 - 让渲染进程获取配置
-ipcMain.on("get-app-config", (event) => {
+ipcMain.on("get-app-config", (event: IpcMainEvent) => {
   event.returnValue = APP_CONFIG;
 });
 
 // 处理番茄钟开始通知
-ipcMain.on("pomodoro-start", (event, taskName) => {
+ipcMain.on("pomodoro-start", (event: IpcMainEvent, taskName: string) => {
   if (Notification.isSupported()) {
     const notification = new Notification({
       title: "番茄钟开始！",
@@ -112,4 +121,4 @@ ipcMain.on("pomodoro-start", (event, taskName) => {
       notification.close();
     }, 3000);
   }
-});
+}); 

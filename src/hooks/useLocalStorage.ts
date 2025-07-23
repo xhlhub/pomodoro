@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 
-export function useLocalStorage(key, initialValue) {
+export function useLocalStorage<T>(
+  key: string, 
+  initialValue: T
+): [T, Dispatch<SetStateAction<T>>] {
   // 获取localStorage中的值
-  const [storedValue, setStoredValue] = useState(() => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -13,7 +16,7 @@ export function useLocalStorage(key, initialValue) {
   });
 
   // 设置值的函数
-  const setValue = (value) => {
+  const setValue: Dispatch<SetStateAction<T>> = (value: SetStateAction<T>) => {
     try {
       // 允许value是一个函数，以便我们能够像useState一样传递函数
       const valueToStore = value instanceof Function ? value(storedValue) : value;

@@ -2,8 +2,9 @@ import React from 'react';
 import './TaskItem.css';
 import ClockIcon from './ClockIcon';
 import { POMODORO_DURATION_MINUTES } from '../config/appConfig';
+import { TaskItemProps } from '../types';
 
-function TaskItem({ 
+const TaskItem: React.FC<TaskItemProps> = ({ 
   task, 
   index, 
   isActive, 
@@ -11,25 +12,25 @@ function TaskItem({
   onStartPomodoro, 
   onDelete, 
   onOpenProgressModal 
-}) {
-  const handleClick = () => {
+}) => {
+  const handleClick = (): void => {
     if (!task.completed) {
       onStartPomodoro(task.id);
     }
   };
 
-  const handleProgressClick = (e) => {
+  const handleProgressClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     onOpenProgressModal(task);
   };
 
-  const handleDeleteClick = (e) => {
+  const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     onDelete(task.id);
   };
 
   // 计算番茄钟显示值
-  const getPomodoroDisplay = () => {
+  const getPomodoroDisplay = (): string => {
     if (task.completed && task.timeSpent > 0) {
       // 任务完成时：显示实际花费时间的番茄钟比例（支持小数）
       const timeRatio = task.timeSpent / POMODORO_DURATION_MINUTES;
@@ -92,6 +93,6 @@ function TaskItem({
       </div>
     </div>
   );
-}
+};
 
 export default TaskItem; 

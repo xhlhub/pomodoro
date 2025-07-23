@@ -1,7 +1,8 @@
 import React from 'react';
 import './ClockIcon.css';
+import { ClockIconProps } from '../types';
 
-function ClockIcon({ size = 20, color = 'white' }) {
+const ClockIcon: React.FC<ClockIconProps> = ({ size = 20, color = 'white' }) => {
   return (
     <svg 
       width={size} 
@@ -66,6 +67,6 @@ function ClockIcon({ size = 20, color = 'white' }) {
       />
     </svg>
   );
-}
+};
 
 export default ClockIcon; 

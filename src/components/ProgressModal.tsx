@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './ProgressModal.css';
+import { ProgressModalProps } from '../types';
 
-function ProgressModal({ task, onClose, onUpdateProgress }) {
-  const [selectedProgress, setSelectedProgress] = useState(0);
-  const [customProgress, setCustomProgress] = useState(0);
+const ProgressModal: React.FC<ProgressModalProps> = ({ task, onClose, onUpdateProgress }) => {
+  const [selectedProgress, setSelectedProgress] = useState<number>(0);
+  const [customProgress, setCustomProgress] = useState<number>(0);
 
   useEffect(() => {
     if (task) {
@@ -12,23 +13,23 @@ function ProgressModal({ task, onClose, onUpdateProgress }) {
     }
   }, [task]);
 
-  const handleProgressButtonClick = (progress) => {
+  const handleProgressButtonClick = (progress: number): void => {
     setSelectedProgress(progress);
     setCustomProgress(progress);
   };
 
-  const handleCustomProgressChange = (e) => {
+  const handleCustomProgressChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = parseInt(e.target.value);
     setCustomProgress(value);
     setSelectedProgress(value);
   };
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     onUpdateProgress(task.id, selectedProgress);
     onClose();
   };
 
-  const handleOverlayClick = (e) => {
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -95,6 +96,6 @@ function ProgressModal({ task, onClose, onUpdateProgress }) {
       </div>
     </div>
   );
-}
+};
 
 export default ProgressModal; 
