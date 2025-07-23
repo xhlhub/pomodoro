@@ -11,11 +11,7 @@ export interface Task {
   createdAt: string;
 }
 
-// 统计接口
-export interface Stats {
-  completedPomodoros: number;
-  totalTime: number;
-}
+
 
 // 计时器状态接口
 export interface TimerState {
@@ -54,8 +50,7 @@ export interface TimerProps {
 }
 
 export interface StatsProps {
-  completedPomodoros: number;
-  totalTime: number;
+  tasks: Task[];
 }
 
 export interface ProgressModalProps {

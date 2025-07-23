@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Header from './components/Header';
 import TaskManager from './components/TaskManager';
@@ -7,8 +7,8 @@ import Stats from './components/Stats';
 import ProgressModal from './components/ProgressModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getCurrentDateString } from './utils/dateUtils';
-import { POMODORO_DURATION_SECONDS, POMODORO_DURATION_MINUTES } from './config/appConfig';
-import { Task, Stats as StatsType, TaskTimerStates, TimerState } from './types';
+import { POMODORO_DURATION_SECONDS } from './config/appConfig';
+import { Task, TaskTimerStates, TimerState } from './types';
 
 // Electron IPC类型定义
 interface ElectronIPC {
@@ -23,7 +23,7 @@ const { ipcRenderer } = electron;
 
 const App: React.FC = () => {
   const [tasks, setTasks] = useLocalStorage<Task[]>('pomodoro-tasks', []);
-  const [stats, setStats] = useLocalStorage<StatsType>('pomodoro-stats', { completedPomodoros: 0, totalTime: 0 });
+
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedTaskForProgress, setSelectedTaskForProgress] = useState<Task | null>(null);
@@ -74,19 +74,14 @@ const App: React.FC = () => {
           : t
       ));
       
-      // 更新全局统计（使用实际花费时间）
-      const actualTimeSpent = POMODORO_DURATION_MINUTES; // 一个完整番茄钟的时间
-      setStats(prev => ({
-        completedPomodoros: prev.completedPomodoros + 1,
-        totalTime: prev.totalTime + actualTimeSpent
-      }));
+
 
       // 发送通知
       if (ipcRenderer) {
         ipcRenderer.send('pomodoro-complete', task.name);
       }
     }
-  }, [tasks, setTasks, setStats]);
+  }, [tasks, setTasks]);
 
   // 全局计时器逻辑 - 为所有正在运行的任务计时
   useEffect(() => {
@@ -355,16 +350,7 @@ const App: React.FC = () => {
     setTaskTimerStates(updatedTimerStates);
   }, [taskTimerStates, setTaskTimerStates]);
 
-  // 计算所有任务的总专注时间（分钟）
-  const totalTaskTime = useMemo(() => {
-    const totalSeconds = tasks.reduce((total, task) => total + task.timeSpent, 0);
-    return Math.round(totalSeconds / 60); // 转换为分钟并四舍五入
-  }, [tasks]);
 
-  // 计算累计番茄数（根据总专注时间折算，向下取整）
-  const totalTomatoCount = useMemo(() => {
-    return Math.floor(totalTaskTime / POMODORO_DURATION_MINUTES);
-  }, [totalTaskTime]);
 
   return (
     <div className="App">
@@ -397,8 +383,7 @@ const App: React.FC = () => {
         )}
         
         <Stats
-          completedPomodoros={totalTomatoCount}
-          totalTime={totalTaskTime}
+          tasks={tasks}
         />
         
         {isModalOpen && selectedTaskForProgress && (
