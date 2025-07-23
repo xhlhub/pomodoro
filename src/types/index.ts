@@ -11,8 +11,6 @@ export interface Task {
   createdAt: string;
 }
 
-
-
 // 计时器状态接口
 export interface TimerState {
   timeLeft: number;
@@ -42,7 +40,7 @@ export interface TaskManagerProps {
 export interface TimerProps {
   currentTask: Task | null;
   timerState: TimerState | null;
-  onTimerStateUpdate: (taskId: number, newState: Partial<TimerState>) => void;
+  onPausedTaskTimer: (taskId: number) => void;
   onStartTaskTimer: (taskId: number, newState: Partial<TimerState>) => void;
 }
 

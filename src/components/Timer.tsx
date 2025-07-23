@@ -6,7 +6,7 @@ import { TimerProps } from '../types';
 const Timer: React.FC<TimerProps> = ({ 
   currentTask, 
   timerState, 
-  onTimerStateUpdate, 
+  onPausedTaskTimer, 
   onStartTaskTimer 
 }) => {
   const clockSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -43,10 +43,7 @@ const Timer: React.FC<TimerProps> = ({
   const pausePomodoro = (): void => {
     if (!currentTask) return;
     
-    onTimerStateUpdate(currentTask.id, {
-      isRunning: false,
-      isPaused: true
-    });
+    onPausedTaskTimer(currentTask.id);
   };
 
   const resumePomodoro = (): void => {

@@ -223,21 +223,12 @@ const App: React.FC = () => {
           audio.play().catch(e => console.log('音效播放失败:', e));
           
           // 暂停该任务的计时器
-          setTaskTimerStates(prevTimerStates => ({
-            ...prevTimerStates,
-            [taskId]: prevTimerStates[taskId] ? {
-              ...prevTimerStates[taskId],
-              isRunning: false,
-              isPaused: true
-            } : prevTimerStates[taskId]
-          }));
+          pausedTaskTimer(taskId);
           
           // 如果完成的任务是当前选中的任务，清除当前任务状态
           if (currentTask && currentTask.id === taskId) {
             setCurrentTask(null);
           }
-          
-          console.log(`任务 ${task.name} 已完成，计时器已暂停`);
         }
         
         return updatedTask;
@@ -266,16 +257,6 @@ const App: React.FC = () => {
     setSelectedTaskForProgress(null);
   }, []);
 
-  // 更新任务计时器状态
-  const updateTaskTimerState = useCallback((taskId: number, newState: Partial<TimerState>): void => {
-    setTaskTimerStates(prev => ({
-      ...prev,
-      [taskId]: {
-        ...prev[taskId],
-        ...newState
-      }
-    }));
-  }, [setTaskTimerStates]);
 
   // 获取当前任务的计时器状态
   const getCurrentTaskTimerState = useCallback((): TimerState | null => {
@@ -293,11 +274,8 @@ const App: React.FC = () => {
     return timerState ? timerState.isRunning : false;
   }, [taskTimerStates]);
 
-  // 原子操作：暂停其他任务并启动当前任务
+  // 启动当前任务, 暂停其他任务
   const startTaskTimer = useCallback((taskId: number, newState: Partial<TimerState>): void => {
-    console.log('startTaskTimer 被调用，任务ID:', taskId, '新状态:', newState);
-    console.log('当前任务状态:', taskTimerStates);
-    
     const updatedTimerStates = { ...taskTimerStates };
     
     // 暂停所有其他正在运行的任务
@@ -318,10 +296,21 @@ const App: React.FC = () => {
       ...newState
     };
     
-    console.log('更新后的状态:', updatedTimerStates);
     setTaskTimerStates(updatedTimerStates);
   }, [taskTimerStates, setTaskTimerStates]);
 
+
+  // 暂停任务
+  const pausedTaskTimer = useCallback((taskId: number): void => {
+    setTaskTimerStates(prevTimerStates => ({
+      ...prevTimerStates,
+      [taskId]: prevTimerStates[taskId] ? {
+        ...prevTimerStates[taskId],
+        isRunning: false,
+        isPaused: true
+      } : prevTimerStates[taskId]
+    }));
+  }, [setTaskTimerStates]);
 
 
   return (
@@ -346,7 +335,7 @@ const App: React.FC = () => {
           <Timer
             currentTask={currentTask}
             timerState={getCurrentTaskTimerState()}
-            onTimerStateUpdate={updateTaskTimerState}
+            onPausedTaskTimer={pausedTaskTimer}
             onStartTaskTimer={startTaskTimer}
           />
         )}
