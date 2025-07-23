@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import './App.css';
 import Header from './components/Header';
 import TaskManager from './components/TaskManager';
@@ -355,6 +355,17 @@ const App: React.FC = () => {
     setTaskTimerStates(updatedTimerStates);
   }, [taskTimerStates, setTaskTimerStates]);
 
+  // 计算所有任务的总专注时间（分钟）
+  const totalTaskTime = useMemo(() => {
+    const totalSeconds = tasks.reduce((total, task) => total + task.timeSpent, 0);
+    return Math.round(totalSeconds / 60); // 转换为分钟并四舍五入
+  }, [tasks]);
+
+  // 计算累计番茄数（根据总专注时间折算，向下取整）
+  const totalTomatoCount = useMemo(() => {
+    return Math.floor(totalTaskTime / POMODORO_DURATION_MINUTES);
+  }, [totalTaskTime]);
+
   return (
     <div className="App">
       <div className="container">
@@ -386,8 +397,8 @@ const App: React.FC = () => {
         )}
         
         <Stats
-          completedPomodoros={stats.completedPomodoros}
-          totalTime={stats.totalTime}
+          completedPomodoros={totalTomatoCount}
+          totalTime={totalTaskTime}
         />
         
         {isModalOpen && selectedTaskForProgress && (

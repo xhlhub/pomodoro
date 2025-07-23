@@ -11,13 +11,13 @@ const Stats: React.FC<StatsProps> = ({ completedPomodoros, totalTime }) => {
           <div className="stat-item">
             <span className="stat-number">{completedPomodoros}</span>
             <span className="stat-label">
-              <i className="fas fa-clock"></i> 完成番茄钟
+             🍅 今日累计番茄数
             </span>
           </div>
           <div className="stat-item">
             <span className="stat-number">{totalTime}</span>
             <span className="stat-label">
-              <i className="fas fa-hourglass-half"></i> 总专注时间(分钟)
+            <i className="fas fa-clock"></i>  今日专注时间(分钟)
             </span>
           </div>
         </div>
