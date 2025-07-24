@@ -147,14 +147,6 @@ const App: React.FC = () => {
   const deleteCategory = useCallback((categoryName: string): void => {
     if (taskCategories.length > 1) { // 至少保留一个分类
       setTaskCategories(prev => prev.filter(cat => cat !== categoryName));
-      // 将该分类下的所有任务移动到第一个分类
-      const remainingCategories = taskCategories.filter(cat => cat !== categoryName);
-      const defaultCategory = remainingCategories[0];
-      setTasks(prev => prev.map(task => 
-        task.category === categoryName 
-          ? { ...task, category: defaultCategory }
-          : task
-      ));
     }
   }, [taskCategories, setTaskCategories, setTasks]);
 
@@ -183,7 +175,7 @@ const App: React.FC = () => {
         if (!wasCompleted && progress >= 100) {
           const audio = new Audio('audio/cheers.mp3');
           audio.play().catch(e => console.log('音效播放失败:', e));
-          
+
           // 完成任务，暂停任务
           if (runningTask && runningTask.taskId === taskId) {
             updatedTask.timeSpent = updatedTask.timeSpent + runningTask.runningTime;
