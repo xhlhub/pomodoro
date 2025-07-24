@@ -31,10 +31,14 @@ const Timer: React.FC<TimerProps> = ({
     }
   };
 
-  const pausePomodoro = (): void => {
+  const pausePomodoro = async (): Promise<void> => {
     if (!currentTask) return;
     
-    onPausedTaskTimer(currentTask.id);
+    try {
+      await onPausedTaskTimer(currentTask.id);
+    } catch (error) {
+      console.error('暂停任务失败:', error);
+    }
   };
 
   const resumePomodoro = (): void => {

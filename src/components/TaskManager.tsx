@@ -42,12 +42,16 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>): void => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.preventDefault();
     const taskName = taskInput.trim();
     if (taskName) {
-      onAddTask(taskName, selectedCategory);
-      setTaskInput('');
+      try {
+        await onAddTask(taskName, selectedCategory);
+        setTaskInput('');
+      } catch (error) {
+        console.error('添加任务失败:', error);
+      }
     }
   };
 
@@ -57,24 +61,32 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     }
   };
 
-  const handleAddCategory = (): void => {
+  const handleAddCategory = async (): Promise<void> => {
     const categoryName = newCategoryInput.trim();
     if (categoryName) {
-      onAddCategory(categoryName);
-      setNewCategoryInput('');
+      try {
+        await onAddCategory(categoryName);
+        setNewCategoryInput('');
+      } catch (error) {
+        console.error('添加分类失败:', error);
+      }
     }
   };
 
-  const handleDeleteCategory = (categoryName: string): void => {
-    onDeleteCategory(categoryName);
-    if (selectedCategory === categoryName) {
-      setSelectedCategory(taskCategories.filter(cat => cat !== categoryName)[0] || '生活');
+  const handleDeleteCategory = async (categoryName: string): Promise<void> => {
+    try {
+      await onDeleteCategory(categoryName);
+      if (selectedCategory === categoryName) {
+        setSelectedCategory(taskCategories.filter(cat => cat !== categoryName)[0] || '生活');
+      }
+    } catch (error) {
+      console.error('删除分类失败:', error);
     }
   };
 
-  const handleDeleteCategoryFromDropdown = (e: React.MouseEvent<HTMLButtonElement>, categoryName: string): void => {
+  const handleDeleteCategoryFromDropdown = async (e: React.MouseEvent<HTMLButtonElement>, categoryName: string): Promise<void> => {
     e.stopPropagation(); // 阻止事件冒泡，避免触发选择分类
-    handleDeleteCategory(categoryName);
+    await handleDeleteCategory(categoryName);
   };
 
   // 按分类分组任务

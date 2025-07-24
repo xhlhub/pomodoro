@@ -4,9 +4,18 @@ export interface Task {
   name: string;
   category: string;
   completed: boolean;
+  pomodoroCount: number;
   timeSpent: number;
   progress: number;
-  created_at: string;
+  date: string;
+  createdAt: string;
+}
+
+// 分类接口
+export interface Category {
+  id: number;
+  name: string;
+  createdAt: string;
 }
 
 // 计时器状态接口
@@ -26,12 +35,12 @@ export interface TaskManagerProps {
   tasks: Task[];
   currentTask: Task | null;
   taskCategories: string[];
-  onAddTask: (taskName: string, category?: string) => void;
-  onDeleteTask: (taskId: number) => void;
+  onAddTask: (taskName: string, category?: string) => Promise<void>;
+  onDeleteTask: (taskId: number) => Promise<void>;
   onStartPomodoro: (taskId: number) => void;
   onOpenProgressModal: (task: Task) => void;
-  onAddCategory: (categoryName: string) => void;
-  onDeleteCategory: (categoryName: string) => void;
+  onAddCategory: (categoryName: string) => Promise<void>;
+  onDeleteCategory: (categoryName: string) => Promise<void>;
   isTaskRunning: (taskId: number) => boolean;
 }
 
@@ -39,7 +48,7 @@ export interface TimerProps {
   currentTask: Task | null;
   timeLeft: number;
   isRunning: boolean;
-  onPausedTaskTimer: (taskId: number) => void;
+  onPausedTaskTimer: (taskId: number) => Promise<void>;
   onStartTaskTimer: (taskId: number) => void;
 }
 
@@ -50,7 +59,7 @@ export interface StatsProps {
 export interface ProgressModalProps {
   task: Task;
   onClose: () => void;
-  onUpdateProgress: (taskId: number, progress: number) => void;
+  onUpdateProgress: (taskId: number, progress: number) => Promise<void>;
 }
 
 export interface TaskItemProps {

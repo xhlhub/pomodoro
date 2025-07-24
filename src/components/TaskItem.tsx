@@ -26,9 +26,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
     onOpenProgressModal(task);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
+  const handleDeleteClick = async (e: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.stopPropagation();
-    onDelete(task.id);
+    try {
+      await onDelete(task.id);
+    } catch (error) {
+      console.error('删除任务失败:', error);
+    }
   };
 
   // 计算番茄钟显示值
@@ -62,7 +66,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
         </div>
         <div className="task-details">
           <span className="task-name">{task.name}</span>
-          <span className="task-date">{task.created_at}</span>
+          <span className="task-date">{task.createdAt}</span>
         </div>
         {pomodoroDisplay && (
           <span className="task-timer">{pomodoroDisplay}</span>

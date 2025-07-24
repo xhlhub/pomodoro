@@ -6,6 +6,8 @@ import Timer from './components/Timer';
 import Stats from './components/Stats';
 import ProgressModal from './components/ProgressModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useCategoryORM } from './hooks/useCategoryORM';
+import { useTaskORM } from './hooks/useTaskORM';
 import { getCurrentDateString } from './utils/dateUtils';
 import { POMODORO_DURATION_SECONDS } from './config/appConfig';
 import { Task } from './types';
@@ -28,14 +30,25 @@ const electron: ElectronIPC = window.require ? window.require('electron') : { ip
 const { ipcRenderer } = electron;
 
 const App: React.FC = () => {
-  const [tasks, setTasks] = useLocalStorage<Task[]>('pomodoro-tasks', []);
+  // 任务数据管理
+  const { 
+    tasks, 
+    createTask, 
+    updateTask, 
+    deleteTask: deleteTaskFromORM, 
+    updateTaskProgress: updateTaskProgressORM 
+  } = useTaskORM();
 
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedTaskForProgress, setSelectedTaskForProgress] = useState<Task | null>(null);
 
   // 任务分类管理
-  const [taskCategories, setTaskCategories] = useLocalStorage<string[]>('pomodoro-categories', ['生活', '工作']);
+  const { 
+    categoryNames: taskCategories, 
+    addCategory: addCategoryToORM, 
+    deleteCategory: deleteCategoryFromORM 
+  } = useCategoryORM();
   
   // 当前正在运行的任务
   const [runningTask, setRunningTask] = useState<RunningTask | null>(null);
@@ -111,7 +124,7 @@ const App: React.FC = () => {
         clearInterval(globalTimerRef.current);
       }
     };
-  }, [runningTask, onPomodoroComplete, setTasks]);
+  }, [runningTask, onPomodoroComplete]);
 
   // 监听任务完成状态，自动暂停已完成任务的计时器
   useEffect(() => {
@@ -123,76 +136,94 @@ const App: React.FC = () => {
     }
   }, [tasks, runningTask]);
 
-  const addTask = useCallback((taskName: string, category: string = '生活'): void => {
-    const newTask: Task = {
-      id: Date.now(),
+  const addTask = useCallback(async (taskName: string, category: string = '生活'): Promise<void> => {
+    const newTaskData = {
       name: taskName,
       category: category,
       completed: false,
+      pomodoroCount: 0,
       timeSpent: 0,
       progress: 0,
-      created_at: getCurrentDateString(),
+      date: getCurrentDateString(),
+      createdAt: new Date().toISOString(),
     };
     
-    setTasks(prev => [...prev, newTask]);
-  }, [setTasks]);
+    try {
+      await createTask(newTaskData);
+    } catch (error) {
+      console.error('创建任务失败:', error);
+    }
+  }, [createTask]);
 
   // 分类管理函数
-  const addCategory = useCallback((categoryName: string): void => {
-    if (categoryName.trim() && !taskCategories.includes(categoryName.trim())) {
-      setTaskCategories(prev => [...prev, categoryName.trim()]);
+  const addCategory = useCallback(async (categoryName: string): Promise<void> => {
+    try {
+      await addCategoryToORM(categoryName);
+    } catch (error) {
+      console.error('添加分类失败:', error);
     }
-  }, [taskCategories, setTaskCategories]);
+  }, [addCategoryToORM]);
 
-  const deleteCategory = useCallback((categoryName: string): void => {
-    if (taskCategories.length > 1) { // 至少保留一个分类
-      setTaskCategories(prev => prev.filter(cat => cat !== categoryName));
+  const deleteCategory = useCallback(async (categoryName: string): Promise<void> => {
+    try {
+      await deleteCategoryFromORM(categoryName);
+    } catch (error) {
+      console.error('删除分类失败:', error);
     }
-  }, [taskCategories, setTaskCategories, setTasks]);
+  }, [deleteCategoryFromORM]);
 
-  const deleteTask = useCallback((taskId: number): void => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
-    // 如果删除的是当前运行的任务，清空运行状态
-    if (runningTask && runningTask.taskId === taskId) {
-      setRunningTask(null);
-    }
-    if (currentTask && currentTask.id === taskId) {
-      setCurrentTask(null);
-    }
-  }, [setTasks, runningTask, currentTask]);
-
-  const updateTaskProgress = useCallback((taskId: number, progress: number): void => {
-    setTasks(prev => prev.map(task => {
-      if (task.id === taskId) {
-        const wasCompleted = task.completed;
-        const updatedTask = {
-          ...task,
-          progress,
-          completed: progress >= 100
-        };
-        
-        // 如果任务刚完成，播放音效并暂停计时器
-        if (!wasCompleted && progress >= 100) {
-          const audio = new Audio('audio/cheers.mp3');
-          audio.play().catch(e => console.log('音效播放失败:', e));
-
-          // 完成任务，暂停任务
-          if (runningTask && runningTask.taskId === taskId) {
-            updatedTask.timeSpent = updatedTask.timeSpent + runningTask.runningTime;
-            setRunningTask(null);
-          }
-         
-          // 如果完成的任务是当前选中的任务，清除当前任务状态
-          if (currentTask && currentTask.id === taskId) {
-            setCurrentTask(null);
-          }
-        }
-        
-        return updatedTask;
+  const deleteTask = useCallback(async (taskId: number): Promise<void> => {
+    try {
+      await deleteTaskFromORM(taskId);
+      // 如果删除的是当前运行的任务，清空运行状态
+      if (runningTask && runningTask.taskId === taskId) {
+        setRunningTask(null);
       }
-      return task;
-    }));
-  }, [setTasks, currentTask]);
+      if (currentTask && currentTask.id === taskId) {
+        setCurrentTask(null);
+      }
+    } catch (error) {
+      console.error('删除任务失败:', error);
+    }
+  }, [deleteTaskFromORM, runningTask, currentTask]);
+
+  const updateTaskProgress = useCallback(async (taskId: number, progress: number): Promise<void> => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const wasCompleted = task.completed;
+      const completed = progress >= 100;
+      
+      let timeSpent = task.timeSpent;
+      
+      // 如果任务刚完成，播放音效并暂停计时器
+      if (!wasCompleted && completed) {
+        const audio = new Audio('audio/cheers.mp3');
+        audio.play().catch(e => console.log('音效播放失败:', e));
+
+        // 完成任务，暂停任务
+        if (runningTask && runningTask.taskId === taskId) {
+          timeSpent = timeSpent + runningTask.runningTime;
+          setRunningTask(null);
+        }
+       
+        // 如果完成的任务是当前选中的任务，清除当前任务状态
+        if (currentTask && currentTask.id === taskId) {
+          setCurrentTask(null);
+        }
+      }
+
+      await updateTaskProgressORM(taskId, progress);
+      
+      // 如果时间发生变化，也要更新
+      if (timeSpent !== task.timeSpent) {
+        await updateTask(taskId, { timeSpent });
+      }
+    } catch (error) {
+      console.error('更新任务进度失败:', error);
+    }
+  }, [tasks, updateTaskProgressORM, updateTask, runningTask, currentTask]);
 
   const startTaskPomodoro = useCallback((taskId: number): void => {
     const task = tasks.find(t => t.id === taskId);
@@ -237,22 +268,25 @@ const App: React.FC = () => {
   }, [runningTask]);
 
   // 暂停任务
-  const pausedTaskTimer = useCallback((taskId: number): void => {
+  const pausedTaskTimer = useCallback(async (taskId: number): Promise<void> => {
     // 如果暂停的是当前正在运行的任务，需要先更新timeSpent然后清空runningTask
     if (runningTask && runningTask.taskId === taskId) {
-      // 更新任务的timeSpent（加上当前已运行的时间）
-      setTasks(prevTasks => 
-        prevTasks.map(task => 
-          task.id === taskId 
-            ? { ...task, timeSpent: task.timeSpent + runningTask.runningTime }
-            : task
-        )
-      );
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        try {
+          // 更新任务的timeSpent（加上当前已运行的时间）
+          await updateTask(taskId, { 
+            timeSpent: task.timeSpent + runningTask.runningTime 
+          });
+        } catch (error) {
+          console.error('更新任务时间失败:', error);
+        }
+      }
       
       // 清空当前运行任务
       setRunningTask(null);
     }
-  }, [runningTask, setTasks]);
+  }, [runningTask, tasks, updateTask]);
 
   // 启动当前任务
   const startTaskTimer = useCallback((taskId: number): void => {

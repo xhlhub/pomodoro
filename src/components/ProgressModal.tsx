@@ -24,9 +24,13 @@ const ProgressModal: React.FC<ProgressModalProps> = ({ task, onClose, onUpdatePr
     setSelectedProgress(value);
   };
 
-  const handleSave = (): void => {
-    onUpdateProgress(task.id, selectedProgress);
-    onClose();
+  const handleSave = async (): Promise<void> => {
+    try {
+      await onUpdateProgress(task.id, selectedProgress);
+      onClose();
+    } catch (error) {
+      console.error('更新进度失败:', error);
+    }
   };
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
