@@ -1,8 +1,8 @@
-import { Task } from '../types';
-import { getCurrentDateString } from '../utils/dateUtils';
+import { Task } from "../types";
+import { getCurrentDateString } from "../utils/dateUtils";
 
 export class TaskLocalStorageORM {
-  private storageKey = 'pomodoro-tasks';
+  private storageKey = "pomodoro-tasks";
 
   constructor() {
     // 确保数据目录存在（localStorage不需要）
@@ -37,28 +37,27 @@ export class TaskLocalStorageORM {
   /**
    * 创建新任务
    */
-  create(taskData: Omit<Task, 'id'>): Task {
+  create(taskData: Omit<Task, "id">): Task {
     try {
       const tasks = this.getAllTasks();
       const newTask: Task = {
         id: Date.now(),
         ...taskData,
-        category: taskData.category || '生活',
+        category: taskData.category || "生活",
         completed: taskData.completed || false,
-        pomodoroCount: taskData.pomodoroCount || 0,
         timeSpent: taskData.timeSpent || 0,
         progress: taskData.progress || 0,
-        date: taskData.date || getCurrentDateString(),
-        createdAt: taskData.createdAt || new Date().toISOString()
+        createdAt: taskData.createdAt || new Date().toISOString(),
+        completedAt: taskData.completedAt || null,
       };
 
       tasks.unshift(newTask); // 添加到开头
       this.saveAllTasks(tasks);
 
-      console.log('任务创建成功:', newTask);
+      console.log("任务创建成功:", newTask);
       return newTask;
     } catch (error) {
-      console.error('创建任务失败:', error);
+      console.error("创建任务失败:", error);
       throw error;
     }
   }
@@ -70,9 +69,12 @@ export class TaskLocalStorageORM {
     try {
       const tasks = this.getAllTasks();
       // 按创建时间倒序排列
-      return tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return tasks.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
     } catch (error) {
-      console.error('查询所有任务失败:', error);
+      console.error("查询所有任务失败:", error);
       throw error;
     }
   }
@@ -80,13 +82,13 @@ export class TaskLocalStorageORM {
   /**
    * 更新任务（支持所有字段除了id）
    */
-  update(id: number, taskData: Partial<Omit<Task, 'id'>>): boolean {
+  update(id: number, taskData: Partial<Omit<Task, "id">>): boolean {
     try {
       const tasks = this.getAllTasks();
-      const taskIndex = tasks.findIndex(task => task.id === id);
-      
+      const taskIndex = tasks.findIndex((task) => task.id === id);
+
       if (taskIndex === -1) {
-        console.warn('任务不存在:', id);
+        console.warn("任务不存在:", id);
         return false;
       }
 
@@ -94,10 +96,10 @@ export class TaskLocalStorageORM {
       tasks[taskIndex] = { ...tasks[taskIndex], ...taskData };
       this.saveAllTasks(tasks);
 
-      console.log('任务更新成功:', id);
+      console.log("任务更新成功:", id);
       return true;
     } catch (error) {
-      console.error('更新任务失败:', error);
+      console.error("更新任务失败:", error);
       throw error;
     }
   }
@@ -108,18 +110,18 @@ export class TaskLocalStorageORM {
   delete(id: number): boolean {
     try {
       const tasks = this.getAllTasks();
-      const filteredTasks = tasks.filter(task => task.id !== id);
-      
+      const filteredTasks = tasks.filter((task) => task.id !== id);
+
       if (filteredTasks.length === tasks.length) {
-        console.warn('任务不存在:', id);
+        console.warn("任务不存在:", id);
         return false;
       }
 
       this.saveAllTasks(filteredTasks);
-      console.log('任务删除成功:', id);
+      console.log("任务删除成功:", id);
       return true;
     } catch (error) {
-      console.error('删除任务失败:', error);
+      console.error("删除任务失败:", error);
       throw error;
     }
   }
@@ -128,7 +130,7 @@ export class TaskLocalStorageORM {
    * 关闭数据库连接（localStorage不需要）
    */
   close(): void {
-    console.log('LocalStorage连接已关闭');
+    console.log("LocalStorage连接已关闭");
   }
 }
 
@@ -147,4 +149,4 @@ export const closeTaskORM = (): void => {
     taskORM.close();
     taskORM = null;
   }
-}; 
+};

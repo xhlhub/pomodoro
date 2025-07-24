@@ -4,11 +4,10 @@ export interface Task {
   name: string;
   category: string;
   completed: boolean;
-  pomodoroCount: number;
   timeSpent: number;
   progress: number;
-  date: string;
   createdAt: string;
+  completedAt: string | null;
 }
 
 // 分类接口
@@ -90,4 +89,4 @@ declare global {
   interface Window {
     require?: (module: string) => any;
   }
-} 
+}

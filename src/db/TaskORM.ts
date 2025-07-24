@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3';
-import { Task } from '../types';
-import { getCurrentDateString } from '../utils/dateUtils';
+import Database from "better-sqlite3";
+import { Task } from "../types";
+import { getCurrentDateString } from "../utils/dateUtils";
 
 export class TaskORM {
   private db: Database.Database;
@@ -11,15 +11,15 @@ export class TaskORM {
 
   constructor(dbPath?: string) {
     // 默认数据库路径
-    const defaultPath = dbPath || './data/pomodoro.db';
+    const defaultPath = dbPath || "./data/pomodoro.db";
     this.db = new Database(defaultPath);
-    
+
     // 启用外键约束
-    this.db.pragma('foreign_keys = ON');
-    
+    this.db.pragma("foreign_keys = ON");
+
     // 初始化数据库表
     this.initializeDatabase();
-    
+
     // 预编译SQL语句以提高性能
     this.prepareStatements();
   }
@@ -35,33 +35,30 @@ export class TaskORM {
         name TEXT NOT NULL,
         category TEXT NOT NULL DEFAULT '生活',
         completed BOOLEAN NOT NULL DEFAULT 0,
-        pomodoro_count INTEGER NOT NULL DEFAULT 0,
         time_spent INTEGER NOT NULL DEFAULT 0,
         progress INTEGER NOT NULL DEFAULT 0,
-        date TEXT NOT NULL,
         created_at TEXT NOT NULL,
+        completed_at TEXT DEFAULT NULL,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
     // 创建索引以提高查询性能
     const createIndexes = [
-      'CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date)',
-      'CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category)',
-      'CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)',
-      'CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at)'
+      "CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)",
+      "CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at)",
     ];
 
     try {
       this.db.exec(createTasksTable);
-      
-      createIndexes.forEach(index => {
+
+      createIndexes.forEach((index) => {
         this.db.exec(index);
       });
-      
-      console.log('数据库表初始化成功');
+
+      console.log("数据库表初始化成功");
     } catch (error) {
-      console.error('数据库初始化失败:', error);
+      console.error("数据库初始化失败:", error);
       throw error;
     }
   }
@@ -71,20 +68,22 @@ export class TaskORM {
    */
   private prepareStatements(): void {
     this.insertStmt = this.db.prepare(`
-      INSERT INTO tasks (name, category, completed, pomodoro_count, time_spent, progress, date, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO tasks (name, category, completed, time_spent, progress, created_at, completed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     this.updateStmt = this.db.prepare(`
       UPDATE tasks 
-      SET name = ?, category = ?, completed = ?, pomodoro_count = ?, 
-          time_spent = ?, progress = ?, date = ?, updated_at = CURRENT_TIMESTAMP
+      SET name = ?, category = ?, completed = ?, 
+          time_spent = ?, progress = ?, completed_at = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
 
-    this.deleteStmt = this.db.prepare('DELETE FROM tasks WHERE id = ?');
-    
-    this.selectAllStmt = this.db.prepare('SELECT * FROM tasks ORDER BY created_at DESC');
+    this.deleteStmt = this.db.prepare("DELETE FROM tasks WHERE id = ?");
+
+    this.selectAllStmt = this.db.prepare(
+      "SELECT * FROM tasks ORDER BY created_at DESC"
+    );
   }
 
   /**
@@ -96,46 +95,43 @@ export class TaskORM {
       name: row.name,
       category: row.category,
       completed: Boolean(row.completed),
-      pomodoroCount: row.pomodoro_count,
       timeSpent: row.time_spent,
       progress: row.progress,
-      date: row.date,
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
     };
   }
 
   /**
    * 创建新任务
    */
-  create(taskData: Omit<Task, 'id'>): Task {
+  create(taskData: Omit<Task, "id">): Task {
     try {
       const result = this.insertStmt.run(
         taskData.name,
-        taskData.category || '生活',
+        taskData.category || "生活",
         taskData.completed ? 1 : 0,
-        taskData.pomodoroCount || 0,
         taskData.timeSpent || 0,
         taskData.progress || 0,
-        taskData.date || getCurrentDateString(),
-        taskData.createdAt || new Date().toISOString()
+        taskData.createdAt || new Date().toISOString(),
+        taskData.completedAt || null
       );
 
       const newTask: Task = {
         id: Number(result.lastInsertRowid),
         ...taskData,
-        category: taskData.category || '生活',
+        category: taskData.category || "生活",
         completed: taskData.completed || false,
-        pomodoroCount: taskData.pomodoroCount || 0,
         timeSpent: taskData.timeSpent || 0,
         progress: taskData.progress || 0,
-        date: taskData.date || getCurrentDateString(),
-        createdAt: taskData.createdAt || new Date().toISOString()
+        createdAt: taskData.createdAt || new Date().toISOString(),
+        completedAt: taskData.completedAt || null,
       };
 
-      console.log('任务创建成功:', newTask);
+      console.log("任务创建成功:", newTask);
       return newTask;
     } catch (error) {
-      console.error('创建任务失败:', error);
+      console.error("创建任务失败:", error);
       throw error;
     }
   }
@@ -146,9 +142,9 @@ export class TaskORM {
   findAll(): Task[] {
     try {
       const rows = this.selectAllStmt.all();
-      return rows.map(row => this.rowToTask(row));
+      return rows.map((row) => this.rowToTask(row));
     } catch (error) {
-      console.error('查询所有任务失败:', error);
+      console.error("查询所有任务失败:", error);
       throw error;
     }
   }
@@ -156,38 +152,39 @@ export class TaskORM {
   /**
    * 更新任务（支持所有字段除了id）
    */
-  update(id: number, taskData: Partial<Omit<Task, 'id'>>): boolean {
+  update(id: number, taskData: Partial<Omit<Task, "id">>): boolean {
     try {
       // 先查询现有任务数据
-      const existingRow = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+      const existingRow = this.db
+        .prepare("SELECT * FROM tasks WHERE id = ?")
+        .get(id);
       if (!existingRow) {
-        console.warn('任务不存在:', id);
+        console.warn("任务不存在:", id);
         return false;
       }
 
       const existingTask = this.rowToTask(existingRow);
-      
+
       // 合并更新数据
       const updatedTask = { ...existingTask, ...taskData };
-      
+
       const result = this.updateStmt.run(
         updatedTask.name,
         updatedTask.category,
         updatedTask.completed ? 1 : 0,
-        updatedTask.pomodoroCount,
         updatedTask.timeSpent,
         updatedTask.progress,
-        updatedTask.date,
+        updatedTask.completedAt,
         id
       );
 
       const success = result.changes > 0;
       if (success) {
-        console.log('任务更新成功:', id);
+        console.log("任务更新成功:", id);
       }
       return success;
     } catch (error) {
-      console.error('更新任务失败:', error);
+      console.error("更新任务失败:", error);
       throw error;
     }
   }
@@ -199,13 +196,13 @@ export class TaskORM {
     try {
       const result = this.deleteStmt.run(id);
       const success = result.changes > 0;
-      
+
       if (success) {
-        console.log('任务删除成功:', id);
+        console.log("任务删除成功:", id);
       }
       return success;
     } catch (error) {
-      console.error('删除任务失败:', error);
+      console.error("删除任务失败:", error);
       throw error;
     }
   }
@@ -216,9 +213,9 @@ export class TaskORM {
   close(): void {
     try {
       this.db.close();
-      console.log('数据库连接已关闭');
+      console.log("数据库连接已关闭");
     } catch (error) {
-      console.error('关闭数据库连接失败:', error);
+      console.error("关闭数据库连接失败:", error);
       throw error;
     }
   }
@@ -239,4 +236,4 @@ export const closeTaskORM = (): void => {
     taskORM.close();
     taskORM = null;
   }
-}; 
+};
