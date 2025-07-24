@@ -5,34 +5,25 @@ import { TimerProps } from '../types';
 
 const Timer: React.FC<TimerProps> = ({ 
   currentTask, 
-  timerState, 
+  timeLeft,
+  isRunning,
   onPausedTaskTimer, 
   onStartTaskTimer 
 }) => {
   const clockSoundRef = useRef<HTMLAudioElement | null>(null);
-  
-  // 从传入的状态中获取计时器数据
-  const timeLeft = timerState?.timeLeft || POMODORO_DURATION_SECONDS;
-  const isRunning = timerState?.isRunning || false;
-  const isPaused = timerState?.isPaused || false;
 
   // 初始化音效
   useEffect(() => {
     clockSoundRef.current = new Audio('audio/clock.mp3');
   }, []);
 
-  // 移除了本地计时逻辑，现在使用全局计时器
-
   const startPomodoro = (): void => {
     if (!currentTask) return;
 
     console.log('开始番茄钟，当前任务:', currentTask);
 
-    // 使用原子操作：暂停其他任务并启动当前任务
-    onStartTaskTimer(currentTask.id, {
-      isRunning: true,
-      isPaused: false
-    });
+    // 启动当前任务
+    onStartTaskTimer(currentTask.id);
 
     // 播放开始音效
     if (clockSoundRef.current) {
@@ -51,11 +42,8 @@ const Timer: React.FC<TimerProps> = ({
     
     console.log('继续番茄钟，当前任务:', currentTask);
     
-    // 使用原子操作：暂停其他任务并继续当前任务
-    onStartTaskTimer(currentTask.id, {
-      isRunning: true,
-      isPaused: false
-    });
+    // 继续当前任务
+    onStartTaskTimer(currentTask.id);
   };
 
   const formatTime = (seconds: number): string => {
@@ -64,7 +52,7 @@ const Timer: React.FC<TimerProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  if (!currentTask || !timerState) {
+  if (!currentTask) {
     return null;
   }
 
@@ -78,7 +66,7 @@ const Timer: React.FC<TimerProps> = ({
       </div>
 
       <div className="timer-controls">
-        {!isRunning && !isPaused && (
+        {!isRunning && (
           <button 
             className="btn btn-success" 
             onClick={startPomodoro}
@@ -95,22 +83,6 @@ const Timer: React.FC<TimerProps> = ({
             <i className="fas fa-pause"></i> 暂停
           </button>
         )}
-        
-        {isPaused && (
-          <button 
-            className="btn btn-info" 
-            onClick={resumePomodoro}
-          >
-            <i className="fas fa-play"></i> 继续
-          </button>
-        )}
-        
-        {/* <button 
-          className="btn btn-danger" 
-          onClick={stopPomodoro}
-        >
-          <i className="fas fa-stop"></i> 停止
-        </button> */}
       </div>
 
       <div className="current-task">

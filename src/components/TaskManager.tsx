@@ -201,4 +201,4 @@ const TaskManager: React.FC<TaskManagerProps> = ({
   );
 };
 
-export default TaskManager; 
+export default React.memo(TaskManager); 

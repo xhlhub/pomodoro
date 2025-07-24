@@ -13,6 +13,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onDelete, 
   onOpenProgressModal 
 }) => {
+  console.log('task', task);
+
   const handleClick = (): void => {
     if (!task.completed) {
       onStartPomodoro(task.id);
@@ -31,6 +33,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
 
   // 计算番茄钟显示值
   const getPomodoroDisplay = (): string => {
+    console.log('task.timeSpent', task.timeSpent);
     if (task.timeSpent > 0) {
       // 根据实际花费时间计算番茄钟比例（支持小数）
       // timeSpent是秒，需要转换为分钟再计算比例
@@ -94,4 +97,4 @@ const TaskItem: React.FC<TaskItemProps> = ({
   );
 };
 
-export default TaskItem; 
+export default React.memo(TaskItem); 

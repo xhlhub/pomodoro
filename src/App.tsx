@@ -8,7 +8,7 @@ import ProgressModal from './components/ProgressModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getCurrentDateString } from './utils/dateUtils';
 import { POMODORO_DURATION_SECONDS } from './config/appConfig';
-import { Task, TaskTimerStates, TimerState } from './types';
+import { Task } from './types';
 
 // Electron IPC类型定义
 interface ElectronIPC {
@@ -33,8 +33,7 @@ const App: React.FC = () => {
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedTaskForProgress, setSelectedTaskForProgress] = useState<Task | null>(null);
-  // 为每个任务维护独立的计时器状态
-  const [taskTimerStates, setTaskTimerStates] = useLocalStorage<TaskTimerStates>('pomodoro-timer-states', {});
+
   // 任务分类管理
   const [taskCategories, setTaskCategories] = useLocalStorage<string[]>('pomodoro-categories', ['生活', '工作']);
   
@@ -92,53 +91,18 @@ const App: React.FC = () => {
       if (!runningTask) return;
       
       const newRunningTime = runningTask.runningTime + 1;
-      const timeLeft = POMODORO_DURATION_SECONDS - newRunningTime;
+      const currentTaskSpentTime = tasks.find(t => t.id === runningTask.taskId)?.timeSpent || 0;
+      const totalSpentTime = currentTaskSpentTime + newRunningTime;
+      const timeLeft = POMODORO_DURATION_SECONDS - (totalSpentTime % POMODORO_DURATION_SECONDS);
       
       if (timeLeft <= 0) {
-        // 计时结束
-        setTaskTimerStates(prev => ({
-          ...prev,
-          [runningTask.taskId]: {
-            ...prev[runningTask.taskId],
-            timeLeft: POMODORO_DURATION_SECONDS,
-            isRunning: false,
-            isPaused: false
-          }
-        }));
-        
-        // 更新任务的timeSpent（包含最后一秒）
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === runningTask.taskId 
-              ? { ...task, timeSpent: task.timeSpent + 1 }
-              : task
-          )
-        );
-        
-        // 清空当前运行任务
-        setRunningTask(null);
-        
+        // 计时结束，停止任务
+        pausedTaskTimer(runningTask.taskId);
         // 触发完成回调
         setTimeout(() => onPomodoroComplete(runningTask.taskId), 100);
       } else {
-        // 更新运行时间和剩余时间
+        // 更新运行时间
         setRunningTask(prev => prev ? { ...prev, runningTime: newRunningTime } : null);
-        setTaskTimerStates(prev => ({
-          ...prev,
-          [runningTask.taskId]: {
-            ...prev[runningTask.taskId],
-            timeLeft: timeLeft
-          }
-        }));
-        
-        // 更新任务的timeSpent
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === runningTask.taskId 
-              ? { ...task, timeSpent: task.timeSpent + 1 }
-              : task
-          )
-        );
       }
     }, 1000);
 
@@ -147,7 +111,17 @@ const App: React.FC = () => {
         clearInterval(globalTimerRef.current);
       }
     };
-  }, [runningTask, onPomodoroComplete, setTasks, setTaskTimerStates]);
+  }, [runningTask, onPomodoroComplete, setTasks]);
+
+  // 监听任务完成状态，自动暂停已完成任务的计时器
+  useEffect(() => {
+    if (runningTask) {
+      const task = tasks.find(t => t.id === runningTask.taskId);
+      if (task && task.completed) {
+        setRunningTask(null);
+      }
+    }
+  }, [tasks, runningTask]);
 
   const addTask = useCallback((taskName: string, category: string = '生活'): void => {
     const newTask: Task = {
@@ -160,18 +134,8 @@ const App: React.FC = () => {
       created_at: getCurrentDateString(),
     };
     
-    // 为新任务初始化计时器状态
-    setTaskTimerStates(prev => ({
-      ...prev,
-      [newTask.id]: {
-        timeLeft: POMODORO_DURATION_SECONDS,
-        isRunning: false,
-        isPaused: false
-      }
-    }));
-    
     setTasks(prev => [...prev, newTask]);
-  }, [setTasks, setTaskTimerStates]);
+  }, [setTasks]);
 
   // 分类管理函数
   const addCategory = useCallback((categoryName: string): void => {
@@ -196,16 +160,14 @@ const App: React.FC = () => {
 
   const deleteTask = useCallback((taskId: number): void => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
-    // 删除对应的计时器状态
-    setTaskTimerStates(prev => {
-      const newStates = { ...prev };
-      delete newStates[taskId];
-      return newStates;
-    });
+    // 如果删除的是当前运行的任务，清空运行状态
+    if (runningTask && runningTask.taskId === taskId) {
+      setRunningTask(null);
+    }
     if (currentTask && currentTask.id === taskId) {
       setCurrentTask(null);
     }
-  }, [setTasks, setTaskTimerStates, currentTask]);
+  }, [setTasks, runningTask, currentTask]);
 
   const updateTaskProgress = useCallback((taskId: number, progress: number): void => {
     setTasks(prev => prev.map(task => {
@@ -222,9 +184,12 @@ const App: React.FC = () => {
           const audio = new Audio('audio/cheers.mp3');
           audio.play().catch(e => console.log('音效播放失败:', e));
           
-          // 暂停该任务的计时器
-          pausedTaskTimer(taskId);
-          
+          // 完成任务，暂停任务
+          if (runningTask && runningTask.taskId === taskId) {
+            updatedTask.timeSpent = updatedTask.timeSpent + runningTask.runningTime;
+            setRunningTask(null);
+          }
+         
           // 如果完成的任务是当前选中的任务，清除当前任务状态
           if (currentTask && currentTask.id === taskId) {
             setCurrentTask(null);
@@ -235,7 +200,7 @@ const App: React.FC = () => {
       }
       return task;
     }));
-  }, [setTasks, setTaskTimerStates, currentTask]);
+  }, [setTasks, currentTask]);
 
   const startTaskPomodoro = useCallback((taskId: number): void => {
     const task = tasks.find(t => t.id === taskId);
@@ -258,21 +223,26 @@ const App: React.FC = () => {
   }, []);
 
 
-  // 获取当前任务的计时器状态
-  const getCurrentTaskTimerState = useCallback((): TimerState | null => {
-    if (!currentTask) return null;
-    return taskTimerStates[currentTask.id] || {
-      timeLeft: POMODORO_DURATION_SECONDS,
-      isRunning: false,
-      isPaused: false
+  // 获取当前任务的时间剩余和运行状态
+  const getTimerState = useCallback((task: Task | null) => {
+    if (!task) {
+      return { timeLeft: POMODORO_DURATION_SECONDS, isRunning: false };
+    }
+    
+    const isRunning = runningTask?.taskId === task.id;
+    const currentRunningTime = isRunning ? runningTask.runningTime : 0;
+    const timeLeft = POMODORO_DURATION_SECONDS - (task.timeSpent % POMODORO_DURATION_SECONDS) - currentRunningTime
+    
+    return {
+      timeLeft: Math.max(0, timeLeft), 
+      isRunning 
     };
-  }, [currentTask, taskTimerStates]);
+  }, [runningTask]);
 
   // 检查任务是否正在运行
   const isTaskRunning = useCallback((taskId: number): boolean => {
-    const timerState = taskTimerStates[taskId];
-    return timerState ? timerState.isRunning : false;
-  }, [taskTimerStates]);
+    return runningTask?.taskId === taskId;
+  }, [runningTask]);
 
   // 暂停任务
   const pausedTaskTimer = useCallback((taskId: number): void => {
@@ -290,40 +260,21 @@ const App: React.FC = () => {
       // 清空当前运行任务
       setRunningTask(null);
     }
-    
-    setTaskTimerStates(prevTimerStates => ({
-      ...prevTimerStates,
-      [taskId]: prevTimerStates[taskId] ? {
-        ...prevTimerStates[taskId],
-        isRunning: false,
-        isPaused: true
-      } : prevTimerStates[taskId]
-    }));
-  }, [runningTask, setTasks, setTaskTimerStates]);
+  }, [runningTask, setTasks]);
 
-  // 启动当前任务, 暂停其他任务
-  const startTaskTimer = useCallback((taskId: number, newState: Partial<TimerState>): void => {
+  // 启动当前任务
+  const startTaskTimer = useCallback((taskId: number): void => {
     // 如果有其他任务正在运行，先暂停它
     if (runningTask && runningTask.taskId !== taskId) {
       pausedTaskTimer(runningTask.taskId);
     }
     
-    const updatedTimerStates = { ...taskTimerStates };
- 
-    
-    // 更新当前任务状态
-    updatedTimerStates[taskId] = {
-      ...updatedTimerStates[taskId],
-      ...newState
-    };
-
+    // 启动新任务
     setRunningTask({
       taskId: taskId,
       runningTime: 0
     });
-    
-    setTaskTimerStates(updatedTimerStates);
-  }, [runningTask, taskTimerStates, setTaskTimerStates, pausedTaskTimer]);
+  }, [runningTask, pausedTaskTimer]);
 
 
   return (
@@ -344,14 +295,18 @@ const App: React.FC = () => {
           isTaskRunning={isTaskRunning}
         />
         
-        {tasks.length > 0 && (
-          <Timer
-            currentTask={currentTask}
-            timerState={getCurrentTaskTimerState()}
-            onPausedTaskTimer={pausedTaskTimer}
-            onStartTaskTimer={startTaskTimer}
-          />
-        )}
+        {tasks.length > 0 && (() => {
+          const { timeLeft, isRunning } = getTimerState(currentTask);
+          return (
+            <Timer
+              currentTask={currentTask}
+              timeLeft={timeLeft}
+              isRunning={isRunning}
+              onPausedTaskTimer={pausedTaskTimer}
+              onStartTaskTimer={startTaskTimer}
+            />
+          );
+        })()}
         
         <Stats
           tasks={tasks}

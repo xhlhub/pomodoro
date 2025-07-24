@@ -37,9 +37,10 @@ export interface TaskManagerProps {
 
 export interface TimerProps {
   currentTask: Task | null;
-  timerState: TimerState | null;
+  timeLeft: number;
+  isRunning: boolean;
   onPausedTaskTimer: (taskId: number) => void;
-  onStartTaskTimer: (taskId: number, newState: Partial<TimerState>) => void;
+  onStartTaskTimer: (taskId: number) => void;
 }
 
 export interface StatsProps {
