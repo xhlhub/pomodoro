@@ -67,21 +67,14 @@ const App: React.FC = () => {
       };
       showCompletionMessage();
 
-      // 更新任务统计（timeSpent已在全局计时器中实时更新，这里只更新pomodoroCount）
-      setTasks(prev => prev.map(t => 
-        t.id === taskId 
-          ? { ...t, pomodoroCount: t.pomodoroCount + 1 }
-          : t
-      ));
-      
-
+      // timeSpent已在全局计时器中实时更新，番茄钟完成时不需要额外更新任务状态
 
       // 发送通知
       if (ipcRenderer) {
         ipcRenderer.send('pomodoro-complete', task.name);
       }
     }
-  }, [tasks, setTasks]);
+  }, [tasks]);
 
   // 全局计时器逻辑 - 为所有正在运行的任务计时
   useEffect(() => {
@@ -153,11 +146,9 @@ const App: React.FC = () => {
       name: taskName,
       category: category,
       completed: false,
-      pomodoroCount: 0,
       timeSpent: 0,
       progress: 0,
-      date: getCurrentDateString(),
-      createdAt: new Date().toISOString(),
+      created_at: getCurrentDateString(),
     };
     
     // 为新任务初始化计时器状态

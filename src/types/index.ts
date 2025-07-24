@@ -4,11 +4,9 @@ export interface Task {
   name: string;
   category: string;
   completed: boolean;
-  pomodoroCount: number;
   timeSpent: number;
   progress: number;
-  date: string;
-  createdAt: string;
+  created_at: string;
 }
 
 // 计时器状态接口

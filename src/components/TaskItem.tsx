@@ -31,17 +31,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
 
   // 计算番茄钟显示值
   const getPomodoroDisplay = (): string => {
-    // console.log('task.timeSpent', task.timeSpent);
-    if (task.completed && task.timeSpent > 0) {
-      // 任务完成时：显示实际花费时间的番茄钟比例（支持小数）
-      // timeSpent现在是秒，需要转换为分钟再计算比例
+    if (task.timeSpent > 0) {
+      // 根据实际花费时间计算番茄钟比例（支持小数）
+      // timeSpent是秒，需要转换为分钟再计算比例
       const timeInMinutes = task.timeSpent / 60;
       const timeRatio = timeInMinutes / POMODORO_DURATION_MINUTES;
       const roundedRatio = Math.round(timeRatio * 10) / 10;
       return `🍅 x ${roundedRatio}`;
-    } else if (!task.completed && task.pomodoroCount > 0) {
-      // 任务未完成时：显示完整的番茄钟数量（整数）
-      return `🍅 x ${task.pomodoroCount}`;
     }
     return '';
   };
@@ -63,7 +59,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
         </div>
         <div className="task-details">
           <span className="task-name">{task.name}</span>
-          <span className="task-date">{task.date}</span>
+          <span className="task-date">{task.created_at}</span>
         </div>
         {pomodoroDisplay && (
           <span className="task-timer">{pomodoroDisplay}</span>
