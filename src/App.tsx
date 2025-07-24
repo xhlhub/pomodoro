@@ -18,6 +18,12 @@ interface ElectronIPC {
   };
 }
 
+// 正在运行的任务状态
+interface RunningTask {
+  taskId: number;
+  runningTime: number; // 已运行的秒数
+}
+
 const electron: ElectronIPC = window.require ? window.require('electron') : { ipcRenderer: undefined };
 const { ipcRenderer } = electron;
 
@@ -31,6 +37,9 @@ const App: React.FC = () => {
   const [taskTimerStates, setTaskTimerStates] = useLocalStorage<TaskTimerStates>('pomodoro-timer-states', {});
   // 任务分类管理
   const [taskCategories, setTaskCategories] = useLocalStorage<string[]>('pomodoro-categories', ['生活', '工作']);
+  
+  // 当前正在运行的任务
+  const [runningTask, setRunningTask] = useState<RunningTask | null>(null);
   
   // 全局计时器引用
   const globalTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -76,56 +85,56 @@ const App: React.FC = () => {
     }
   }, [tasks]);
 
-  // 全局计时器逻辑 - 为所有正在运行的任务计时
+  // 全局计时器逻辑 - 为当前正在运行的任务计时
   useEffect(() => {
-    // 启动全局计时器，每秒检查所有任务状态
+    // 启动全局计时器，每秒更新当前运行任务
     globalTimerRef.current = setInterval(() => {
-      const runningTaskIds: string[] = [];
+      if (!runningTask) return;
       
-      setTaskTimerStates(prev => {
-        const newStates = { ...prev };
-        let hasTimerChanges = false;
-
-        // 遍历所有任务，为正在运行的任务计时
-        Object.keys(newStates).forEach(taskId => {
-          const currentState = newStates[taskId];
-          if (currentState && currentState.isRunning && currentState.timeLeft > 0) {
-            
-            if (currentState.timeLeft <= 1) {
-              // 计时结束
-              newStates[taskId] = {
-                ...currentState,
-                timeLeft: POMODORO_DURATION_SECONDS,
-                isRunning: false,
-                isPaused: false
-              };
-              
-              // 最后一秒也要计入时间
-              runningTaskIds.push(taskId);
-              
-              // 触发完成回调
-              setTimeout(() => onPomodoroComplete(parseInt(taskId)), 100);
-              hasTimerChanges = true;
-            } else {
-              // 减少时间，这秒的时间会在下面统一更新
-              newStates[taskId] = {
-                ...currentState,
-                timeLeft: currentState.timeLeft - 1
-              };
-              runningTaskIds.push(taskId);
-              hasTimerChanges = true;
-            }
+      const newRunningTime = runningTask.runningTime + 1;
+      const timeLeft = POMODORO_DURATION_SECONDS - newRunningTime;
+      
+      if (timeLeft <= 0) {
+        // 计时结束
+        setTaskTimerStates(prev => ({
+          ...prev,
+          [runningTask.taskId]: {
+            ...prev[runningTask.taskId],
+            timeLeft: POMODORO_DURATION_SECONDS,
+            isRunning: false,
+            isPaused: false
           }
-        });
-
-        return hasTimerChanges ? newStates : prev;
-      });
-
-      // 为所有正在运行的任务更新timeSpent（每秒增加1秒）
-      if (runningTaskIds.length > 0) {
+        }));
+        
+        // 更新任务的timeSpent（包含最后一秒）
         setTasks(prevTasks => 
           prevTasks.map(task => 
-            runningTaskIds.includes(task.id.toString()) 
+            task.id === runningTask.taskId 
+              ? { ...task, timeSpent: task.timeSpent + 1 }
+              : task
+          )
+        );
+        
+        // 清空当前运行任务
+        setRunningTask(null);
+        
+        // 触发完成回调
+        setTimeout(() => onPomodoroComplete(runningTask.taskId), 100);
+      } else {
+        // 更新运行时间和剩余时间
+        setRunningTask(prev => prev ? { ...prev, runningTime: newRunningTime } : null);
+        setTaskTimerStates(prev => ({
+          ...prev,
+          [runningTask.taskId]: {
+            ...prev[runningTask.taskId],
+            timeLeft: timeLeft
+          }
+        }));
+        
+        // 更新任务的timeSpent
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === runningTask.taskId 
               ? { ...task, timeSpent: task.timeSpent + 1 }
               : task
           )
@@ -138,7 +147,7 @@ const App: React.FC = () => {
         clearInterval(globalTimerRef.current);
       }
     };
-  }, [onPomodoroComplete, setTasks]); // 移除taskTimerStates依赖
+  }, [runningTask, onPomodoroComplete, setTasks, setTaskTimerStates]);
 
   const addTask = useCallback((taskName: string, category: string = '生活'): void => {
     const newTask: Task = {
@@ -265,34 +274,23 @@ const App: React.FC = () => {
     return timerState ? timerState.isRunning : false;
   }, [taskTimerStates]);
 
-  // 启动当前任务, 暂停其他任务
-  const startTaskTimer = useCallback((taskId: number, newState: Partial<TimerState>): void => {
-    const updatedTimerStates = { ...taskTimerStates };
-    
-    // 暂停所有其他正在运行的任务
-    Object.keys(updatedTimerStates).forEach(id => {
-      if (parseInt(id) !== taskId && updatedTimerStates[id].isRunning) {
-        console.log(`暂停任务 ${id}`);
-        updatedTimerStates[id] = {
-          ...updatedTimerStates[id],
-          isRunning: false,
-          isPaused: true
-        };
-      }
-    });
-    
-    // 更新当前任务状态
-    updatedTimerStates[taskId] = {
-      ...updatedTimerStates[taskId],
-      ...newState
-    };
-    
-    setTaskTimerStates(updatedTimerStates);
-  }, [taskTimerStates, setTaskTimerStates]);
-
-
   // 暂停任务
   const pausedTaskTimer = useCallback((taskId: number): void => {
+    // 如果暂停的是当前正在运行的任务，需要先更新timeSpent然后清空runningTask
+    if (runningTask && runningTask.taskId === taskId) {
+      // 更新任务的timeSpent（加上当前已运行的时间）
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, timeSpent: task.timeSpent + runningTask.runningTime }
+            : task
+        )
+      );
+      
+      // 清空当前运行任务
+      setRunningTask(null);
+    }
+    
     setTaskTimerStates(prevTimerStates => ({
       ...prevTimerStates,
       [taskId]: prevTimerStates[taskId] ? {
@@ -301,7 +299,31 @@ const App: React.FC = () => {
         isPaused: true
       } : prevTimerStates[taskId]
     }));
-  }, [setTaskTimerStates]);
+  }, [runningTask, setTasks, setTaskTimerStates]);
+
+  // 启动当前任务, 暂停其他任务
+  const startTaskTimer = useCallback((taskId: number, newState: Partial<TimerState>): void => {
+    // 如果有其他任务正在运行，先暂停它
+    if (runningTask && runningTask.taskId !== taskId) {
+      pausedTaskTimer(runningTask.taskId);
+    }
+    
+    const updatedTimerStates = { ...taskTimerStates };
+ 
+    
+    // 更新当前任务状态
+    updatedTimerStates[taskId] = {
+      ...updatedTimerStates[taskId],
+      ...newState
+    };
+
+    setRunningTask({
+      taskId: taskId,
+      runningTime: 0
+    });
+    
+    setTaskTimerStates(updatedTimerStates);
+  }, [runningTask, taskTimerStates, setTaskTimerStates, pausedTaskTimer]);
 
 
   return (
