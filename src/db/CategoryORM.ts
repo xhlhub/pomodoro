@@ -21,17 +21,20 @@ export class CategoryORM {
     // 启用外键约束
     this.db.pragma('foreign_keys = ON');
     
-    // 初始化数据库表
-    this.initializeDatabase();
+    // 先创建表结构
+    this.createTables();
     
     // 预编译SQL语句以提高性能
     this.prepareStatements();
+    
+    // 最后初始化默认分类
+    this.initializeDefaultCategories();
   }
 
   /**
-   * 初始化数据库表结构
+   * 创建数据库表结构
    */
-  private initializeDatabase(): void {
+  private createTables(): void {
     // 创建分类表
     const createCategoriesTable = `
       CREATE TABLE IF NOT EXISTS categories (
@@ -52,9 +55,6 @@ export class CategoryORM {
       createIndexes.forEach(index => {
         this.db.exec(index);
       });
-
-      // 初始化默认分类
-      this.initializeDefaultCategories();
       
       console.log('分类数据库表初始化成功');
     } catch (error) {

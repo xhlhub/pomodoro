@@ -1,5 +1,9 @@
-import { app, BrowserWindow, ipcMain, Notification, IpcMainEvent } from "electron";
+import { app, BrowserWindow, ipcMain, Notification, IpcMainEvent, IpcMainInvokeEvent } from "electron";
 import * as path from "path";
+import * as fs from "fs";
+import { TaskORM } from "./src/db/TaskORM";
+import { CategoryORM } from "./src/db/CategoryORM";
+import { Task } from "./src/types";
 
 const isDev: boolean = !app.isPackaged;
 
@@ -21,6 +25,31 @@ const APP_CONFIG: AppConfig = {
 const POMODORO_DURATION_MINUTES: number = APP_CONFIG.POMODORO_DURATION_MINUTES;
 
 let mainWindow: BrowserWindow | null;
+let taskORM: TaskORM | null = null;
+let categoryORM: CategoryORM | null = null;
+
+// 确保数据目录存在
+function ensureDataDirectory(): void {
+  const dataDir = path.join(__dirname, "data");
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log("数据目录已创建:", dataDir);
+  }
+}
+
+// 初始化数据库
+function initializeDatabase(): void {
+  try {
+    ensureDataDirectory();
+    const dbPath = path.join(__dirname, "data", "pomodoro.db");
+    taskORM = new TaskORM(dbPath);
+    categoryORM = new CategoryORM(dbPath);
+    console.log("SQLite数据库初始化成功");
+  } catch (error) {
+    console.error("数据库初始化失败:", error);
+    throw error;
+  }
+}
 
 function createWindow(): void {
   // 创建浏览器窗口
@@ -65,10 +94,22 @@ function createWindow(): void {
 }
 
 // 当 Electron 完成初始化并准备创建浏览器窗口时调用此方法
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  initializeDatabase();
+  createWindow();
+});
 
 // 当所有窗口都关闭时退出应用
 app.on("window-all-closed", () => {
+  if (taskORM) {
+    taskORM.close();
+    taskORM = null;
+  }
+  if (categoryORM) {
+    categoryORM.close();
+    categoryORM = null;
+  }
+  
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -120,5 +161,106 @@ ipcMain.on("pomodoro-start", (event: IpcMainEvent, taskName: string) => {
     setTimeout(() => {
       notification.close();
     }, 3000);
+  }
+}); 
+
+// TaskORM IPC handlers
+// 创建任务
+ipcMain.handle("task-create", async (event: IpcMainInvokeEvent, taskData: Omit<Task, "id">) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.create(taskData);
+  } catch (error) {
+    console.error("创建任务失败:", error);
+    throw error;
+  }
+});
+
+// 查询所有任务
+ipcMain.handle("task-find-all", async (event: IpcMainInvokeEvent) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.findAll();
+  } catch (error) {
+    console.error("查询任务失败:", error);
+    throw error;
+  }
+});
+
+// 更新任务
+ipcMain.handle("task-update", async (event: IpcMainInvokeEvent, id: number, taskData: Partial<Omit<Task, "id">>) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.update(id, taskData);
+  } catch (error) {
+    console.error("更新任务失败:", error);
+    throw error;
+  }
+});
+
+// 删除任务
+ipcMain.handle("task-delete", async (event: IpcMainInvokeEvent, id: number) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.delete(id);
+  } catch (error) {
+    console.error("删除任务失败:", error);
+    throw error;
+  }
+}); 
+
+// CategoryORM IPC handlers
+// 查询所有分类
+ipcMain.handle("category-find-all", async (event: IpcMainInvokeEvent) => {
+  try {
+    if (!categoryORM) throw new Error("数据库未初始化");
+    return categoryORM.findAll();
+  } catch (error) {
+    console.error("查询分类失败:", error);
+    throw error;
+  }
+});
+
+// 获取所有分类名称
+ipcMain.handle("category-get-all-names", async (event: IpcMainInvokeEvent) => {
+  try {
+    if (!categoryORM) throw new Error("数据库未初始化");
+    return categoryORM.getAllNames();
+  } catch (error) {
+    console.error("获取分类名称失败:", error);
+    throw error;
+  }
+});
+
+// 添加分类
+ipcMain.handle("category-add", async (event: IpcMainInvokeEvent, name: string) => {
+  try {
+    if (!categoryORM) throw new Error("数据库未初始化");
+    return categoryORM.addCategory(name);
+  } catch (error) {
+    console.error("添加分类失败:", error);
+    throw error;
+  }
+});
+
+// 删除分类
+ipcMain.handle("category-delete", async (event: IpcMainInvokeEvent, name: string) => {
+  try {
+    if (!categoryORM) throw new Error("数据库未初始化");
+    return categoryORM.deleteCategory(name);
+  } catch (error) {
+    console.error("删除分类失败:", error);
+    throw error;
+  }
+});
+
+// 检查分类是否存在
+ipcMain.handle("category-exists", async (event: IpcMainInvokeEvent, name: string) => {
+  try {
+    if (!categoryORM) throw new Error("数据库未初始化");
+    return categoryORM.exists(name);
+  } catch (error) {
+    console.error("检查分类是否存在失败:", error);
+    throw error;
   }
 }); 

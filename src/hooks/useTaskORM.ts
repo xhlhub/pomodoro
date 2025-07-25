@@ -1,25 +1,53 @@
 import { useState, useEffect, useCallback } from "react";
 import { Task } from "../types";
-import { getTaskORM, closeTaskORM } from "../db/TaskLocalStorageORM";
+
+declare global {
+  interface Window {
+    require?: (module: string) => any;
+  }
+}
+
+// IPC通信接口
+interface IpcRenderer {
+  invoke: (channel: string, ...args: any[]) => Promise<any>;
+}
+
+// 获取IPC渲染器
+const getIpcRenderer = (): IpcRenderer | null => {
+  try {
+    if (window.require) {
+      const { ipcRenderer } = window.require('electron');
+      return ipcRenderer;
+    }
+    return null;
+  } catch (error) {
+    console.error("无法获取ipcRenderer:", error);
+    return null;
+  }
+};
 
 /**
- * React Hook for TaskORM integration
- * 提供数据库操作的React接口
+ * React Hook for TaskORM integration with SQLite via IPC
+ * 提供数据库操作的React接口，通过IPC与主进程的SQLite数据库通信
  */
 export const useTaskORM = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 获取ORM实例
-  const orm = getTaskORM();
+  const ipcRenderer = getIpcRenderer();
 
   // 加载所有任务
   const loadTasks = useCallback(async () => {
+    if (!ipcRenderer) {
+      setError("IPC通信不可用");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const allTasks = orm.findAll();
+      const allTasks = await ipcRenderer.invoke("task-find-all");
       setTasks(allTasks);
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载任务失败");
@@ -27,7 +55,7 @@ export const useTaskORM = () => {
     } finally {
       setLoading(false);
     }
-  }, [orm]);
+  }, [ipcRenderer]);
 
   // 初始化数据
   useEffect(() => {
@@ -37,9 +65,13 @@ export const useTaskORM = () => {
   // 创建任务
   const createTask = useCallback(
     async (taskData: Omit<Task, "id">) => {
+      if (!ipcRenderer) {
+        throw new Error("IPC通信不可用");
+      }
+
       try {
         setError(null);
-        const newTask = orm.create(taskData);
+        const newTask = await ipcRenderer.invoke("task-create", taskData);
         setTasks((prev) => [newTask, ...prev]);
         return newTask;
       } catch (err) {
@@ -49,15 +81,19 @@ export const useTaskORM = () => {
         throw new Error(errorMsg);
       }
     },
-    [orm]
+    [ipcRenderer]
   );
 
   // 更新任务
   const updateTask = useCallback(
     async (id: number, taskData: Partial<Omit<Task, "id">>) => {
+      if (!ipcRenderer) {
+        throw new Error("IPC通信不可用");
+      }
+
       try {
         setError(null);
-        const success = orm.update(id, taskData);
+        const success = await ipcRenderer.invoke("task-update", id, taskData);
         if (success) {
           setTasks((prev) =>
             prev.map((task) =>
@@ -74,15 +110,19 @@ export const useTaskORM = () => {
         throw new Error(errorMsg);
       }
     },
-    [orm]
+    [ipcRenderer]
   );
 
   // 删除任务
   const deleteTask = useCallback(
     async (id: number) => {
+      if (!ipcRenderer) {
+        throw new Error("IPC通信不可用");
+      }
+
       try {
         setError(null);
-        const success = orm.delete(id);
+        const success = await ipcRenderer.invoke("task-delete", id);
         if (success) {
           setTasks((prev) => prev.filter((task) => task.id !== id));
           return true;
@@ -95,14 +135,15 @@ export const useTaskORM = () => {
         throw new Error(errorMsg);
       }
     },
-    [orm]
+    [ipcRenderer]
   );
 
   // 更新任务进度（基于通用update方法）
   const updateTaskProgress = useCallback(
     async (id: number, progress: number) => {
       const completed = progress >= 100;
-      return updateTask(id, { progress, completed });
+      const completedAt = completed ? new Date().toISOString() : null;
+      return updateTask(id, { progress, completed, completedAt });
     },
     [updateTask]
   );
@@ -118,7 +159,8 @@ export const useTaskORM = () => {
   // 标记任务完成（基于通用update方法）
   const markTaskCompleted = useCallback(
     async (id: number, completed: boolean = true) => {
-      return updateTask(id, { completed });
+      const completedAt = completed ? new Date().toISOString() : null;
+      return updateTask(id, { completed, completedAt });
     },
     [updateTask]
   );
@@ -164,7 +206,8 @@ export const useTaskORM = () => {
 
   // 清理函数
   const cleanup = useCallback(() => {
-    closeTaskORM();
+    // SQLite在主进程，这里不需要特殊清理
+    console.log("TaskORM清理完成");
   }, []);
 
   return {
