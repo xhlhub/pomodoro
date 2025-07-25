@@ -3,6 +3,7 @@ import './History.css';
 import { Task } from '../types';
 import { useTaskORM } from '../hooks/useTaskORM';
 import { getDateStart, getDateEnd } from '../utils/dateUtils';
+import { POMODORO_DURATION_MINUTES } from '../config/appConfig';
 
 interface HistoryProps {
   onGoBack: () => void;
@@ -63,6 +64,24 @@ const History: React.FC<HistoryProps> = ({ onGoBack }) => {
       return `${minutes}分钟${remainingSeconds}秒`;
     } else {
       return `${remainingSeconds}秒`;
+    }
+  };
+
+  // 将耗时转换为番茄图标
+  const formatDurationAsTomatoes = (seconds: number): React.ReactElement => {
+    const pomodoroSeconds = POMODORO_DURATION_MINUTES * 60;
+    const tomatoCount = Math.round(seconds / pomodoroSeconds);
+    
+    if (tomatoCount <= 0) {
+      return <span className="tomato-display">🍅 &lt; 1</span>;
+    } else if (tomatoCount <= 5) {
+      return (
+        <span className="tomato-display">
+          {'🍅'.repeat(tomatoCount)}
+        </span>
+      );
+    } else {
+      return <span className="tomato-display">🍅 x {tomatoCount}</span>;
     }
   };
 
@@ -166,7 +185,7 @@ const History: React.FC<HistoryProps> = ({ onGoBack }) => {
                       完成于 {formatDate(task.completedAt!)}
                     </span>
                     <span className="time-spent">
-                      耗时 {formatDuration(task.timeSpent)}
+                     {formatDurationAsTomatoes(task.timeSpent)}
                     </span>
                   </div>
                 </div>
