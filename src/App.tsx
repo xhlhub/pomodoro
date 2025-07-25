@@ -110,14 +110,13 @@ const App: React.FC = () => {
       if (!runningTask) return;
 
       const newRunningTime = runningTask.runningTime + 1;
-      const currentTaskSpentTime =
-        tasks.find((t) => t.id === runningTask.taskId)?.timeSpent || 0;
-      const totalSpentTime = currentTaskSpentTime + newRunningTime;
-      const timeLeft =
-        POMODORO_DURATION_SECONDS -
-        (totalSpentTime % POMODORO_DURATION_SECONDS);
+      // 获取运行任务番茄钟的已用时间
+      const runningTaskSpentTime =
+        (tasks.find((t) => t.id === runningTask.taskId)?.timeSpent || 0) % POMODORO_DURATION_SECONDS;
+      const totalSpentTime = runningTaskSpentTime + newRunningTime;
+      const timeLeft = POMODORO_DURATION_SECONDS - totalSpentTime;
 
-      if (timeLeft <= 0) {
+      if (timeLeft < 0) {
         // 计时结束，停止任务
         pausedTaskTimer(runningTask.taskId);
         // 触发完成回调
@@ -278,14 +277,13 @@ const App: React.FC = () => {
       if (!task) {
         return { timeLeft: POMODORO_DURATION_SECONDS, isRunning: false };
       }
-
       const isRunning = runningTask?.taskId === task.id;
+      const newTask = tasks.find((t) => t.id === task.id);
       const currentRunningTime = isRunning ? runningTask.runningTime : 0;
       const timeLeft =
         POMODORO_DURATION_SECONDS -
-        (task.timeSpent % POMODORO_DURATION_SECONDS) -
+        ((newTask?.timeSpent || 0) % POMODORO_DURATION_SECONDS) -
         currentRunningTime;
-
       return {
         timeLeft: Math.max(0, timeLeft),
         isRunning,
@@ -314,6 +312,7 @@ const App: React.FC = () => {
             await updateTask(taskId, {
               timeSpent: task.timeSpent + runningTask.runningTime,
             });
+           
           } catch (error) {
             console.error("更新任务时间失败:", error);
           }

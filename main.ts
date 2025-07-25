@@ -16,7 +16,7 @@ interface AppConfig {
 
 // 应用配置 - 统一配置源
 const APP_CONFIG: AppConfig = {
-  POMODORO_DURATION_MINUTES: 3,
+  POMODORO_DURATION_MINUTES: 1,
   BREAK_DURATION_MINUTES: 5,
   LONG_BREAK_DURATION_MINUTES: 15,
 };
