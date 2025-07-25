@@ -76,6 +76,11 @@ export interface ClockIconProps {
   color?: string;
 }
 
+export interface HistoryProps {
+  tasks: Task[];
+  onGoBack: () => void;
+}
+
 // Electron IPC类型
 export interface ElectronAPI {
   ipcRenderer?: {

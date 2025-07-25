@@ -5,6 +5,7 @@ import TaskManager from "./components/TaskManager";
 import Timer from "./components/Timer";
 import Stats from "./components/Stats";
 import ProgressModal from "./components/ProgressModal";
+import History from "./components/History";
 import { useCategoryORM } from "./hooks/useCategoryORM";
 import { useTaskORM } from "./hooks/useTaskORM";
 import { POMODORO_DURATION_SECONDS } from "./config/appConfig";
@@ -43,6 +44,7 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedTaskForProgress, setSelectedTaskForProgress] =
     useState<Task | null>(null);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
 
   // 任务分类管理
   const {
@@ -340,46 +342,60 @@ const App: React.FC = () => {
     [runningTask, pausedTaskTimer]
   );
 
+  const handleShowHistory = useCallback(() => {
+    setShowHistory(true);
+  }, []);
+
+  const handleBackToMain = useCallback(() => {
+    setShowHistory(false);
+  }, []);
+
   return (
     <div className="App">
       <div className="container">
-        <Header />
+        {showHistory ? (
+          <History tasks={tasks} onGoBack={handleBackToMain} />
+        ) : (
+          <>
+            <Header onShowHistory={handleShowHistory} />
 
-        <TaskManager
-          tasks={tasks}
-          currentTask={currentTask}
-          taskCategories={taskCategories}
-          onAddTask={addTask}
-          onDeleteTask={deleteTask}
-          onStartPomodoro={startTaskPomodoro}
-          onOpenProgressModal={openProgressModal}
-          onAddCategory={addCategory}
-          onDeleteCategory={deleteCategory}
-          isTaskRunning={isTaskRunning}
-        />
+            <TaskManager
+              tasks={tasks}
+              currentTask={currentTask}
+              taskCategories={taskCategories}
+              onAddTask={addTask}
+              onDeleteTask={deleteTask}
+              onStartPomodoro={startTaskPomodoro}
+              onOpenProgressModal={openProgressModal}
+              onAddCategory={addCategory}
+              onDeleteCategory={deleteCategory}
+              isTaskRunning={isTaskRunning}
+            />
 
-        {tasks.length > 0 &&
-          (() => {
-            const { timeLeft, isRunning } = getTimerState(currentTask);
-            return (
-              <Timer
-                currentTask={currentTask}
-                timeLeft={timeLeft}
-                isRunning={isRunning}
-                onPausedTaskTimer={pausedTaskTimer}
-                onStartTaskTimer={startTaskTimer}
+            {tasks.length > 0 &&
+              (() => {
+                const { timeLeft, isRunning } = getTimerState(currentTask);
+                return (
+                  <Timer
+                    currentTask={currentTask}
+                    timeLeft={timeLeft}
+                    isRunning={isRunning}
+                    onPausedTaskTimer={pausedTaskTimer}
+                    onStartTaskTimer={startTaskTimer}
+                  />
+                );
+              })()}
+
+            <Stats tasks={tasks} />
+
+            {isModalOpen && selectedTaskForProgress && (
+              <ProgressModal
+                task={selectedTaskForProgress}
+                onClose={closeProgressModal}
+                onUpdateProgress={updateTaskProgress}
               />
-            );
-          })()}
-
-        <Stats tasks={tasks} />
-
-        {isModalOpen && selectedTaskForProgress && (
-          <ProgressModal
-            task={selectedTaskForProgress}
-            onClose={closeProgressModal}
-            onUpdateProgress={updateTaskProgress}
-          />
+            )}
+          </>
         )}
       </div>
     </div>

@@ -1,0 +1,222 @@
+.history {
+  min-height: 100vh;
+  color: white;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.history .back-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.history .back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-3px);
+}
+
+.history-header h2 {
+  font-size: 2rem;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.history-content {
+  max-width: 100%;
+}
+
+.history .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.history .empty-state p {
+  font-size: 1.2rem;
+  margin: 10px 0;
+  opacity: 0.8;
+}
+
+.history .empty-subtitle {
+  font-size: 1rem !important;
+  opacity: 0.6 !important;
+}
+
+.history-summary {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.history .summary-card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 120px;
+}
+
+.history .summary-number {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #28a745;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.history .summary-label {
+  display: block;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: 5px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.history-item {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.history .task-info {
+  flex: 1;
+}
+
+.history .task-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.history .task-name {
+  font-size: 1.2rem;
+  margin: 0;
+  color: white;
+  font-weight: 600;
+}
+
+.history .task-category {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: white;
+}
+
+.history .task-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history .completion-time,
+.history .time-spent {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  color: white;
+}
+
+.history .time-spent {
+  font-weight: 500;
+  color: #28a745;
+  opacity: 0.9;
+}
+
+.history .task-progress {
+  margin-left: 20px;
+}
+
+.history .progress-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.history .progress-text {
+  position: absolute;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #28a745;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .history .history-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .history .history-summary {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .history .summary-card {
+    min-width: auto;
+  }
+  
+  .history .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .history .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .history .task-progress {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+} 
