@@ -7,7 +7,6 @@ import Stats from "./components/Stats";
 import ProgressModal from "./components/ProgressModal";
 import { useCategoryORM } from "./hooks/useCategoryORM";
 import { useTaskORM } from "./hooks/useTaskORM";
-import { getCurrentDateString } from "./utils/dateUtils";
 import { POMODORO_DURATION_SECONDS } from "./config/appConfig";
 import { Task } from "./types";
 
