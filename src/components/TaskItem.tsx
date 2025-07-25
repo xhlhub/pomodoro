@@ -15,6 +15,37 @@ const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   console.log("task", task);
 
+  // 格式化日期为月日格式
+  const formatDateToMonthDay = (dateStr: string): string => {
+    try {
+      const date = new Date(dateStr);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return `${month}月${day}日`;
+    } catch (error) {
+      return dateStr; // 如果格式化失败，返回原始字符串
+    }
+  };
+
+  // 检查日期是否为今天
+  const isToday = (dateStr: string): boolean => {
+    try {
+      const date = new Date(dateStr);
+      const today = new Date();
+      return date.toDateString() === today.toDateString();
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // 获取显示的创建日期
+  const getDisplayDate = (): string | null => {
+    if (!task.completed && !isToday(task.createdAt)) {
+      return `创建于: ${formatDateToMonthDay(task.createdAt)}`;
+    }
+    return null;
+  };
+
   const handleClick = (): void => {
     if (!task.completed) {
       onStartPomodoro(task.id);
@@ -65,11 +96,11 @@ const TaskItem: React.FC<TaskItemProps> = ({
         </div>
         <div className="task-details">
           <span className="task-name">{task.name}</span>
-          <span className="task-date">
-            {task.completedAt
-              ? `完成于: ${task.completedAt}`
-              : `创建于: ${task.createdAt}`}
-          </span>
+          {getDisplayDate() && (
+            <span className="task-date">
+              {getDisplayDate()}
+            </span>
+          )}
         </div>
         {pomodoroDisplay && (
           <span className="task-timer">{pomodoroDisplay}</span>
