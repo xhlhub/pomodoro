@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import { Task } from "../types";
-import { getCurrentDateString } from "../utils/dateUtils";
+import { getCurrentDateString, getTodayStart, getTodayEnd, formatDateForDB, isBeforeToday } from "../utils/dateUtils";
 
 export class TaskORM {
   private db: Database.Database;
@@ -8,6 +8,10 @@ export class TaskORM {
   private updateStmt!: Database.Statement;
   private deleteStmt!: Database.Statement;
   private selectAllStmt!: Database.Statement;
+  // 新增预编译语句
+  private selectActiveTasksStmt!: Database.Statement;
+  private selectHistoryTasksStmt!: Database.Statement;
+  private selectTasksByDateRangeStmt!: Database.Statement;
 
   constructor(dbPath?: string) {
     // 默认数据库路径
@@ -47,6 +51,7 @@ export class TaskORM {
     const createIndexes = [
       "CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)",
       "CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at)",
+      "CREATE INDEX IF NOT EXISTS idx_tasks_completed_at ON tasks(completed_at)",
     ];
 
     try {
@@ -84,6 +89,29 @@ export class TaskORM {
     this.selectAllStmt = this.db.prepare(
       "SELECT * FROM tasks ORDER BY created_at DESC"
     );
+
+    // 查询活跃任务：未完成的任务 + 今日创建的任务
+    this.selectActiveTasksStmt = this.db.prepare(`
+      SELECT * FROM tasks 
+      WHERE completed = 0 OR (created_at >= ? AND created_at <= ?)
+      ORDER BY created_at DESC
+    `);
+
+    // 查询历史已完成任务（不包括今天）
+    this.selectHistoryTasksStmt = this.db.prepare(`
+      SELECT * FROM tasks 
+      WHERE completed = 1 AND completed_at IS NOT NULL AND completed_at < ?
+      ORDER BY completed_at DESC
+    `);
+
+    // 按时间范围查询任务（创建日期或完成日期在范围内）
+    this.selectTasksByDateRangeStmt = this.db.prepare(`
+      SELECT * FROM tasks 
+      WHERE (created_at >= ? AND created_at <= ?) 
+         OR (completed_at IS NOT NULL AND completed_at >= ? AND completed_at <= ?)
+      ORDER BY 
+        CASE WHEN completed_at IS NOT NULL THEN completed_at ELSE created_at END DESC
+    `);
   }
 
   /**
@@ -145,6 +173,91 @@ export class TaskORM {
       return rows.map((row) => this.rowToTask(row));
     } catch (error) {
       console.error("查询所有任务失败:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取活跃任务：未完成的任务 + 今日创建的任务
+   */
+  findActiveTasks(): Task[] {
+    try {
+      const todayStart = formatDateForDB(getTodayStart());
+      const todayEnd = formatDateForDB(getTodayEnd());
+      
+      const rows = this.selectActiveTasksStmt.all(todayStart, todayEnd);
+      return rows.map((row) => this.rowToTask(row));
+    } catch (error) {
+      console.error("查询活跃任务失败:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取历史已完成任务（不包括今天）
+   */
+  findHistoryTasks(): Task[] {
+    try {
+      const todayStart = formatDateForDB(getTodayStart());
+      
+      const rows = this.selectHistoryTasksStmt.all(todayStart);
+      return rows.map((row) => this.rowToTask(row));
+    } catch (error) {
+      console.error("查询历史任务失败:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 按时间范围查询任务
+   * @param startDate 开始日期
+   * @param endDate 结束日期
+   * @returns 在指定时间范围内创建或完成的任务
+   */
+  findTasksByDateRange(startDate: Date, endDate: Date): Task[] {
+    try {
+      const start = formatDateForDB(startDate);
+      const end = formatDateForDB(endDate);
+      
+      const rows = this.selectTasksByDateRangeStmt.all(start, end, start, end);
+      return rows.map((row) => this.rowToTask(row));
+    } catch (error) {
+      console.error("按时间范围查询任务失败:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取历史已完成任务（支持时间范围过滤）
+   * @param startDate 可选的开始日期
+   * @param endDate 可选的结束日期
+   * @returns 历史已完成任务
+   */
+  findHistoryTasksInRange(startDate?: Date, endDate?: Date): Task[] {
+    try {
+      if (startDate && endDate) {
+        // 如果提供了时间范围，使用范围查询但只返回已完成的任务
+        const start = formatDateForDB(startDate);
+        const end = formatDateForDB(endDate);
+        
+        const stmt = this.db.prepare(`
+          SELECT * FROM tasks 
+          WHERE completed = 1 AND completed_at IS NOT NULL 
+            AND ((created_at >= ? AND created_at <= ?) 
+                 OR (completed_at >= ? AND completed_at <= ?))
+            AND completed_at < ?
+          ORDER BY completed_at DESC
+        `);
+        
+        const todayStart = formatDateForDB(getTodayStart());
+        const rows = stmt.all(start, end, start, end, todayStart);
+        return rows.map((row) => this.rowToTask(row));
+      } else {
+        // 如果没有提供时间范围，返回所有历史已完成任务
+        return this.findHistoryTasks();
+      }
+    } catch (error) {
+      console.error("按时间范围查询历史任务失败:", error);
       throw error;
     }
   }

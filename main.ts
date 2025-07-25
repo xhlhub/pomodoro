@@ -209,6 +209,52 @@ ipcMain.handle("task-delete", async (event: IpcMainInvokeEvent, id: number) => {
   }
 }); 
 
+// 获取活跃任务（未完成任务 + 今日创建的任务）
+ipcMain.handle("task-find-active", async (event: IpcMainInvokeEvent) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.findActiveTasks();
+  } catch (error) {
+    console.error("查询活跃任务失败:", error);
+    throw error;
+  }
+});
+
+// 获取历史已完成任务（不包括今天）
+ipcMain.handle("task-find-history", async (event: IpcMainInvokeEvent) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.findHistoryTasks();
+  } catch (error) {
+    console.error("查询历史任务失败:", error);
+    throw error;
+  }
+});
+
+// 按时间范围查询任务
+ipcMain.handle("task-find-by-date-range", async (event: IpcMainInvokeEvent, startDate: string, endDate: string) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    return taskORM.findTasksByDateRange(new Date(startDate), new Date(endDate));
+  } catch (error) {
+    console.error("按时间范围查询任务失败:", error);
+    throw error;
+  }
+});
+
+// 获取历史已完成任务（支持时间范围过滤）
+ipcMain.handle("task-find-history-in-range", async (event: IpcMainInvokeEvent, startDate?: string, endDate?: string) => {
+  try {
+    if (!taskORM) throw new Error("数据库未初始化");
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return taskORM.findHistoryTasksInRange(start, end);
+  } catch (error) {
+    console.error("查询时间范围内的历史任务失败:", error);
+    throw error;
+  }
+});
+
 // CategoryORM IPC handlers
 // 查询所有分类
 ipcMain.handle("category-find-all", async (event: IpcMainInvokeEvent) => {

@@ -204,6 +204,98 @@ export const useTaskORM = () => {
     await loadTasks();
   }, [loadTasks]);
 
+  // 加载活跃任务（未完成任务 + 今日创建的任务）
+  const loadActiveTasks = useCallback(async () => {
+    if (!ipcRenderer) {
+      setError("IPC通信不可用");
+      return [];
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const activeTasks = await ipcRenderer.invoke("task-find-active");
+      return activeTasks;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "加载活跃任务失败");
+      console.error("加载活跃任务失败:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [ipcRenderer]);
+
+  // 加载历史任务（不包括今天）
+  const loadHistoryTasks = useCallback(async () => {
+    if (!ipcRenderer) {
+      setError("IPC通信不可用");
+      return [];
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const historyTasks = await ipcRenderer.invoke("task-find-history");
+      return historyTasks;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "加载历史任务失败");
+      console.error("加载历史任务失败:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [ipcRenderer]);
+
+  // 按时间范围查询任务
+  const loadTasksByDateRange = useCallback(async (startDate: Date, endDate: Date) => {
+    if (!ipcRenderer) {
+      setError("IPC通信不可用");
+      return [];
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const rangeTasks = await ipcRenderer.invoke(
+        "task-find-by-date-range", 
+        startDate.toISOString(), 
+        endDate.toISOString()
+      );
+      return rangeTasks;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "按时间范围查询任务失败");
+      console.error("按时间范围查询任务失败:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [ipcRenderer]);
+
+  // 加载历史任务（支持时间范围过滤）
+  const loadHistoryTasksInRange = useCallback(async (startDate?: Date, endDate?: Date) => {
+    if (!ipcRenderer) {
+      setError("IPC通信不可用");
+      return [];
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const historyTasks = await ipcRenderer.invoke(
+        "task-find-history-in-range",
+        startDate?.toISOString(),
+        endDate?.toISOString()
+      );
+      return historyTasks;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "加载历史任务失败");
+      console.error("加载历史任务失败:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [ipcRenderer]);
+
   // 清理函数
   const cleanup = useCallback(() => {
     // SQLite在主进程，这里不需要特殊清理
@@ -228,6 +320,12 @@ export const useTaskORM = () => {
     getTasksByCategory,
     getCompletedTasks,
     getIncompleteTasks,
+
+    // 新增的日期查询方法
+    loadActiveTasks,
+    loadHistoryTasks,
+    loadTasksByDateRange,
+    loadHistoryTasksInRange,
 
     // 统计和工具方法
     getStats,

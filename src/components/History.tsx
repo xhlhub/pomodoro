@@ -1,21 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './History.css';
 import { Task } from '../types';
+import { useTaskORM } from '../hooks/useTaskORM';
+import { getDateStart, getDateEnd } from '../utils/dateUtils';
 
 interface HistoryProps {
-  tasks: Task[];
   onGoBack: () => void;
 }
 
-const History: React.FC<HistoryProps> = ({ tasks, onGoBack }) => {
-  // 过滤出已完成的任务，按完成时间倒序排列
-  const completedTasks = tasks
-    .filter(task => task.completed && task.completedAt)
-    .sort((a, b) => {
-      const dateA = new Date(a.completedAt!).getTime();
-      const dateB = new Date(b.completedAt!).getTime();
-      return dateB - dateA;
-    });
+const History: React.FC<HistoryProps> = ({ onGoBack }) => {
+  const { loadHistoryTasksInRange } = useTaskORM();
+  const [historyTasks, setHistoryTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+
+  // 加载历史任务
+  const loadHistoryTasks = useCallback(async (start?: Date, end?: Date) => {
+    try {
+      setLoading(true);
+      const tasks = await loadHistoryTasksInRange(start, end);
+      setHistoryTasks(tasks);
+    } catch (error) {
+      console.error("加载历史任务失败:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadHistoryTasksInRange]);
+
+  // 初始化加载所有历史任务
+  useEffect(() => {
+    loadHistoryTasks();
+  }, [loadHistoryTasks]);
+
+  // 处理时间范围搜索
+  const handleDateRangeSearch = useCallback(() => {
+    if (startDate && endDate) {
+      const start = getDateStart(new Date(startDate));
+      const end = getDateEnd(new Date(endDate));
+      loadHistoryTasks(start, end);
+    } else {
+      // 如果没有选择日期范围，加载所有历史任务
+      loadHistoryTasks();
+    }
+  }, [startDate, endDate, loadHistoryTasks]);
+
+  // 清除日期范围筛选
+  const handleClearDateRange = useCallback(() => {
+    setStartDate('');
+    setEndDate('');
+    loadHistoryTasks();
+  }, [loadHistoryTasks]);
 
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -63,29 +98,63 @@ const History: React.FC<HistoryProps> = ({ tasks, onGoBack }) => {
         <h2>📚 历史记录</h2>
       </div>
 
+      <div className="history-filters">
+        <div className="date-range-filter">
+          <div className="date-inputs">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              placeholder="开始日期"
+            />
+            <span>至</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              placeholder="结束日期"
+            />
+          </div>
+          <div className="filter-buttons">
+            <button onClick={handleDateRangeSearch} className="search-button">
+              搜索
+            </button>
+            <button onClick={handleClearDateRange} className="clear-button">
+              清除
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="history-content">
-        {completedTasks.length === 0 ? (
+        {loading ? (
+          <div className="loading">
+            <p>加载中...</p>
+          </div>
+        ) : historyTasks.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📝</div>
-            <p>还没有完成的任务</p>
-            <p className="empty-subtitle">完成任务后会在这里显示</p>
+            <p>没有找到历史任务</p>
+            <p className="empty-subtitle">
+              {startDate || endDate ? "请尝试调整时间范围" : "完成任务后会在这里显示"}
+            </p>
           </div>
         ) : (
           <div className="history-list">
             <div className="history-summary">
               <div className="summary-card">
-                <span className="summary-number">{completedTasks.length}</span>
+                <span className="summary-number">{historyTasks.length}</span>
                 <span className="summary-label">已完成任务</span>
               </div>
               <div className="summary-card">
                 <span className="summary-number">
-                  {Math.floor(completedTasks.reduce((total, task) => total + task.timeSpent, 0) / 3600)}
+                  {Math.floor(historyTasks.reduce((total, task) => total + task.timeSpent, 0) / 3600)}
                 </span>
                 <span className="summary-label">总计小时</span>
               </div>
             </div>
 
-            {completedTasks.map((task) => (
+            {historyTasks.map((task) => (
               <div key={task.id} className="history-item">
                 <div className="task-info">
                   <div className="task-header">

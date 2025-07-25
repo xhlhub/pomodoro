@@ -36,6 +36,107 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.history-filters {
+  margin-bottom: 30px;
+}
+
+.date-range-filter {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.date-inputs input[type="date"] {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: white;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.date-inputs input[type="date"]:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.date-inputs input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.date-inputs span {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.search-button,
+.clear-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.search-button {
+  background: #28a745;
+  color: white;
+}
+
+.search-button:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.clear-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.clear-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loading p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
 .history-content {
   max-width: 100%;
 }
@@ -192,6 +293,33 @@
 @media (max-width: 768px) {
   .history .history-header h2 {
     font-size: 1.5rem;
+  }
+  
+  .date-inputs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .date-inputs input[type="date"] {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .date-inputs span {
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  
+  .filter-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .search-button,
+  .clear-button {
+    width: 100%;
+    padding: 12px;
   }
   
   .history .history-summary {

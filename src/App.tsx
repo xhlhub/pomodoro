@@ -38,6 +38,7 @@ const App: React.FC = () => {
     updateTask,
     deleteTask: deleteTaskFromORM,
     updateTaskProgress: updateTaskProgressORM,
+    loadActiveTasks,
   } = useTaskORM();
 
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
@@ -53,15 +54,34 @@ const App: React.FC = () => {
     deleteCategory: deleteCategoryFromORM,
   } = useCategoryORM();
 
+  // 活跃任务状态
+  const [activeTasks, setActiveTasks] = useState<Task[]>([]);
+
   // 当前正在运行的任务
   const [runningTask, setRunningTask] = useState<RunningTask | null>(null);
 
   // 全局计时器引用
   const globalTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 加载活跃任务
+  const refreshActiveTasks = useCallback(async () => {
+    try {
+      const tasks = await loadActiveTasks();
+      debugger
+      setActiveTasks(tasks);
+    } catch (error) {
+      console.error("加载活跃任务失败:", error);
+    }
+  }, [loadActiveTasks]);
+
+  // 初始化加载活跃任务
+  useEffect(() => {
+    refreshActiveTasks();
+  }, [refreshActiveTasks]);
+
   const onPomodoroComplete = useCallback(
     (taskId: number): void => {
-      const task = tasks.find((t) => t.id === taskId);
+      const task = activeTasks.find((t) => t.id === taskId);
       if (task) {
         // 播放完成音效
         const cheersSoundRef = new Audio("audio/cheers.mp3");
@@ -100,7 +120,7 @@ const App: React.FC = () => {
         }
       }
     },
-    [tasks]
+    [activeTasks]
   );
 
   // 全局计时器逻辑 - 为当前正在运行的任务计时
@@ -112,7 +132,7 @@ const App: React.FC = () => {
       const newRunningTime = runningTask.runningTime + 1;
       // 获取运行任务番茄钟的已用时间
       const runningTaskSpentTime =
-        (tasks.find((t) => t.id === runningTask.taskId)?.timeSpent || 0) % POMODORO_DURATION_SECONDS;
+        (activeTasks.find((t) => t.id === runningTask.taskId)?.timeSpent || 0) % POMODORO_DURATION_SECONDS;
       const totalSpentTime = runningTaskSpentTime + newRunningTime;
       const timeLeft = POMODORO_DURATION_SECONDS - totalSpentTime;
 
@@ -139,12 +159,12 @@ const App: React.FC = () => {
   // 监听任务完成状态，自动暂停已完成任务的计时器
   useEffect(() => {
     if (runningTask) {
-      const task = tasks.find((t) => t.id === runningTask.taskId);
+      const task = activeTasks.find((t) => t.id === runningTask.taskId);
       if (task && task.completed) {
         setRunningTask(null);
       }
     }
-  }, [tasks, runningTask]);
+  }, [activeTasks, runningTask]);
 
   const addTask = useCallback(
     async (taskName: string, category: string = "生活"): Promise<void> => {
@@ -159,11 +179,13 @@ const App: React.FC = () => {
       };
       try {
         await createTask(newTaskData);
+        // 创建任务后刷新活跃任务列表
+        await refreshActiveTasks();
       } catch (error) {
         console.error("创建任务失败:", error);
       }
     },
-    [createTask]
+    [createTask, refreshActiveTasks]
   );
 
   // 分类管理函数
@@ -200,17 +222,19 @@ const App: React.FC = () => {
         if (currentTask && currentTask.id === taskId) {
           setCurrentTask(null);
         }
+        // 删除任务后刷新活跃任务列表
+        await refreshActiveTasks();
       } catch (error) {
         console.error("删除任务失败:", error);
       }
     },
-    [deleteTaskFromORM, runningTask, currentTask]
+    [deleteTaskFromORM, runningTask, currentTask, refreshActiveTasks]
   );
 
   const updateTaskProgress = useCallback(
     async (taskId: number, progress: number): Promise<void> => {
       try {
-        const task = tasks.find((t) => t.id === taskId);
+        const task = activeTasks.find((t) => t.id === taskId);
         if (!task) return;
 
         const wasCompleted = task.completed;
@@ -241,16 +265,18 @@ const App: React.FC = () => {
         if (timeSpent !== task.timeSpent) {
           await updateTask(taskId, { timeSpent });
         }
+        // 更新任务后刷新活跃任务列表
+        await refreshActiveTasks();
       } catch (error) {
         console.error("更新任务进度失败:", error);
       }
     },
-    [tasks, updateTaskProgressORM, updateTask, runningTask, currentTask]
+    [activeTasks, updateTaskProgressORM, updateTask, runningTask, currentTask, refreshActiveTasks]
   );
 
   const startTaskPomodoro = useCallback(
     (taskId: number): void => {
-      const task = tasks.find((t) => t.id === taskId);
+      const task = activeTasks.find((t) => t.id === taskId);
       if (task && !task.completed) {
         setCurrentTask(task);
         if (ipcRenderer) {
@@ -258,7 +284,7 @@ const App: React.FC = () => {
         }
       }
     },
-    [tasks]
+    [activeTasks]
   );
 
   const openProgressModal = useCallback((task: Task): void => {
@@ -278,7 +304,7 @@ const App: React.FC = () => {
         return { timeLeft: POMODORO_DURATION_SECONDS, isRunning: false };
       }
       const isRunning = runningTask?.taskId === task.id;
-      const newTask = tasks.find((t) => t.id === task.id);
+      const newTask = activeTasks.find((t) => t.id === task.id);
       const currentRunningTime = isRunning ? runningTask.runningTime : 0;
       const timeLeft =
         POMODORO_DURATION_SECONDS -
@@ -289,7 +315,7 @@ const App: React.FC = () => {
         isRunning,
       };
     },
-    [runningTask]
+    [runningTask, activeTasks]
   );
 
   // 检查任务是否正在运行
@@ -305,14 +331,15 @@ const App: React.FC = () => {
     async (taskId: number): Promise<void> => {
       // 如果暂停的是当前正在运行的任务，需要先更新timeSpent然后清空runningTask
       if (runningTask && runningTask.taskId === taskId) {
-        const task = tasks.find((t) => t.id === taskId);
+        const task = activeTasks.find((t) => t.id === taskId);
         if (task) {
           try {
             // 更新任务的timeSpent（加上当前已运行的时间）
             await updateTask(taskId, {
               timeSpent: task.timeSpent + runningTask.runningTime,
             });
-           
+            // 更新任务后刷新活跃任务列表
+            await refreshActiveTasks();
           } catch (error) {
             console.error("更新任务时间失败:", error);
           }
@@ -322,7 +349,7 @@ const App: React.FC = () => {
         setRunningTask(null);
       }
     },
-    [runningTask, tasks, updateTask]
+    [runningTask, activeTasks, updateTask, refreshActiveTasks]
   );
 
   // 启动当前任务
@@ -354,13 +381,13 @@ const App: React.FC = () => {
     <div className="App">
       <div className="container">
         {showHistory ? (
-          <History tasks={tasks} onGoBack={handleBackToMain} />
+          <History onGoBack={handleBackToMain} />
         ) : (
           <>
             <Header onShowHistory={handleShowHistory} />
 
             <TaskManager
-              tasks={tasks}
+              tasks={activeTasks}
               currentTask={currentTask}
               taskCategories={taskCategories}
               onAddTask={addTask}
@@ -372,7 +399,7 @@ const App: React.FC = () => {
               isTaskRunning={isTaskRunning}
             />
 
-            {tasks.length > 0 &&
+            {activeTasks.length > 0 &&
               (() => {
                 const { timeLeft, isRunning } = getTimerState(currentTask);
                 return (
@@ -386,7 +413,7 @@ const App: React.FC = () => {
                 );
               })()}
 
-            <Stats tasks={tasks} />
+            <Stats tasks={activeTasks} />
 
             {isModalOpen && selectedTaskForProgress && (
               <ProgressModal
