@@ -5,7 +5,6 @@ import TaskManager from "./components/TaskManager";
 import Timer from "./components/Timer";
 import Stats from "./components/Stats";
 import ProgressModal from "./components/ProgressModal";
-import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useCategoryORM } from "./hooks/useCategoryORM";
 import { useTaskORM } from "./hooks/useTaskORM";
 import { getCurrentDateString } from "./utils/dateUtils";

@@ -236,28 +236,3 @@ export const useTaskORM = () => {
     cleanup,
   };
 };
-
-// 简化版本的Hook，仅包含基本操作
-export const useTaskDB = () => {
-  const {
-    tasks,
-    loading,
-    error,
-    createTask,
-    updateTask,
-    deleteTask,
-    updateTaskProgress,
-    getStats,
-  } = useTaskORM();
-
-  return {
-    tasks,
-    loading,
-    error,
-    createTask,
-    updateTask,
-    deleteTask,
-    updateTaskProgress,
-    getStats,
-  };
-};

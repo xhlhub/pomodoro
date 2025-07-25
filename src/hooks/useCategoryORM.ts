@@ -199,24 +199,3 @@ export const useCategoryORM = () => {
     cleanup
   };
 };
-
-// 简化版本的Hook，仅返回分类名称和基本操作
-export const useCategoryNames = () => {
-  const {
-    categoryNames,
-    loading,
-    error,
-    addCategory,
-    deleteCategory,
-    categoryExistsLocal
-  } = useCategoryORM();
-
-  return {
-    categoryNames,
-    loading,
-    error,
-    addCategory,
-    deleteCategory,
-    categoryExists: categoryExistsLocal // 使用本地同步版本
-  };
-}; 
