@@ -1,4 +1,11 @@
-import { app, BrowserWindow, ipcMain, Notification, IpcMainEvent, IpcMainInvokeEvent } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Notification,
+  IpcMainEvent,
+  IpcMainInvokeEvent,
+} from "electron";
 import * as path from "path";
 import * as fs from "fs";
 import { TaskORM } from "./src/db/TaskORM";
@@ -69,10 +76,16 @@ function createWindow(): void {
   });
 
   // 根据环境加载不同的URL
-  const startUrl: string = isDev
-    ? "http://localhost:3000"
-    : `file://${path.join(__dirname, "./build/index.html")}`;
+  let startUrl: string;
+  if (isDev) {
+    startUrl = "http://localhost:3000";
+  } else {
+    // 生产环境下，build文件夹在extraResources中
+    const buildPath = path.join(process.resourcesPath, "build", "index.html");
+    startUrl = `file://${buildPath}`;
+  }
 
+  console.log("Loading URL:", startUrl);
   mainWindow.loadURL(startUrl);
 
   // 开发模式下打开开发者工具
@@ -109,7 +122,7 @@ app.on("window-all-closed", () => {
     categoryORM.close();
     categoryORM = null;
   }
-  
+
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -162,19 +175,22 @@ ipcMain.on("pomodoro-start", (event: IpcMainEvent, taskName: string) => {
       notification.close();
     }, 3000);
   }
-}); 
+});
 
 // TaskORM IPC handlers
 // 创建任务
-ipcMain.handle("task-create", async (event: IpcMainInvokeEvent, taskData: Omit<Task, "id">) => {
-  try {
-    if (!taskORM) throw new Error("数据库未初始化");
-    return taskORM.create(taskData);
-  } catch (error) {
-    console.error("创建任务失败:", error);
-    throw error;
+ipcMain.handle(
+  "task-create",
+  async (event: IpcMainInvokeEvent, taskData: Omit<Task, "id">) => {
+    try {
+      if (!taskORM) throw new Error("数据库未初始化");
+      return taskORM.create(taskData);
+    } catch (error) {
+      console.error("创建任务失败:", error);
+      throw error;
+    }
   }
-});
+);
 
 // 查询所有任务
 ipcMain.handle("task-find-all", async (event: IpcMainInvokeEvent) => {
@@ -188,15 +204,22 @@ ipcMain.handle("task-find-all", async (event: IpcMainInvokeEvent) => {
 });
 
 // 更新任务
-ipcMain.handle("task-update", async (event: IpcMainInvokeEvent, id: number, taskData: Partial<Omit<Task, "id">>) => {
-  try {
-    if (!taskORM) throw new Error("数据库未初始化");
-    return taskORM.update(id, taskData);
-  } catch (error) {
-    console.error("更新任务失败:", error);
-    throw error;
+ipcMain.handle(
+  "task-update",
+  async (
+    event: IpcMainInvokeEvent,
+    id: number,
+    taskData: Partial<Omit<Task, "id">>
+  ) => {
+    try {
+      if (!taskORM) throw new Error("数据库未初始化");
+      return taskORM.update(id, taskData);
+    } catch (error) {
+      console.error("更新任务失败:", error);
+      throw error;
+    }
   }
-});
+);
 
 // 删除任务
 ipcMain.handle("task-delete", async (event: IpcMainInvokeEvent, id: number) => {
@@ -207,7 +230,7 @@ ipcMain.handle("task-delete", async (event: IpcMainInvokeEvent, id: number) => {
     console.error("删除任务失败:", error);
     throw error;
   }
-}); 
+});
 
 // 获取活跃任务（未完成任务 + 今日创建的任务）
 ipcMain.handle("task-find-active", async (event: IpcMainInvokeEvent) => {
@@ -232,28 +255,37 @@ ipcMain.handle("task-find-history", async (event: IpcMainInvokeEvent) => {
 });
 
 // 按时间范围查询任务
-ipcMain.handle("task-find-by-date-range", async (event: IpcMainInvokeEvent, startDate: string, endDate: string) => {
-  try {
-    if (!taskORM) throw new Error("数据库未初始化");
-    return taskORM.findTasksByDateRange(new Date(startDate), new Date(endDate));
-  } catch (error) {
-    console.error("按时间范围查询任务失败:", error);
-    throw error;
+ipcMain.handle(
+  "task-find-by-date-range",
+  async (event: IpcMainInvokeEvent, startDate: string, endDate: string) => {
+    try {
+      if (!taskORM) throw new Error("数据库未初始化");
+      return taskORM.findTasksByDateRange(
+        new Date(startDate),
+        new Date(endDate)
+      );
+    } catch (error) {
+      console.error("按时间范围查询任务失败:", error);
+      throw error;
+    }
   }
-});
+);
 
 // 获取历史已完成任务（支持时间范围过滤）
-ipcMain.handle("task-find-history-in-range", async (event: IpcMainInvokeEvent, startDate?: string, endDate?: string) => {
-  try {
-    if (!taskORM) throw new Error("数据库未初始化");
-    const start = startDate ? new Date(startDate) : undefined;
-    const end = endDate ? new Date(endDate) : undefined;
-    return taskORM.findHistoryTasksInRange(start, end);
-  } catch (error) {
-    console.error("查询时间范围内的历史任务失败:", error);
-    throw error;
+ipcMain.handle(
+  "task-find-history-in-range",
+  async (event: IpcMainInvokeEvent, startDate?: string, endDate?: string) => {
+    try {
+      if (!taskORM) throw new Error("数据库未初始化");
+      const start = startDate ? new Date(startDate) : undefined;
+      const end = endDate ? new Date(endDate) : undefined;
+      return taskORM.findHistoryTasksInRange(start, end);
+    } catch (error) {
+      console.error("查询时间范围内的历史任务失败:", error);
+      throw error;
+    }
   }
-});
+);
 
 // CategoryORM IPC handlers
 // 查询所有分类
@@ -279,34 +311,43 @@ ipcMain.handle("category-get-all-names", async (event: IpcMainInvokeEvent) => {
 });
 
 // 添加分类
-ipcMain.handle("category-add", async (event: IpcMainInvokeEvent, name: string) => {
-  try {
-    if (!categoryORM) throw new Error("数据库未初始化");
-    return categoryORM.addCategory(name);
-  } catch (error) {
-    console.error("添加分类失败:", error);
-    throw error;
+ipcMain.handle(
+  "category-add",
+  async (event: IpcMainInvokeEvent, name: string) => {
+    try {
+      if (!categoryORM) throw new Error("数据库未初始化");
+      return categoryORM.addCategory(name);
+    } catch (error) {
+      console.error("添加分类失败:", error);
+      throw error;
+    }
   }
-});
+);
 
 // 删除分类
-ipcMain.handle("category-delete", async (event: IpcMainInvokeEvent, name: string) => {
-  try {
-    if (!categoryORM) throw new Error("数据库未初始化");
-    return categoryORM.deleteCategory(name);
-  } catch (error) {
-    console.error("删除分类失败:", error);
-    throw error;
+ipcMain.handle(
+  "category-delete",
+  async (event: IpcMainInvokeEvent, name: string) => {
+    try {
+      if (!categoryORM) throw new Error("数据库未初始化");
+      return categoryORM.deleteCategory(name);
+    } catch (error) {
+      console.error("删除分类失败:", error);
+      throw error;
+    }
   }
-});
+);
 
 // 检查分类是否存在
-ipcMain.handle("category-exists", async (event: IpcMainInvokeEvent, name: string) => {
-  try {
-    if (!categoryORM) throw new Error("数据库未初始化");
-    return categoryORM.exists(name);
-  } catch (error) {
-    console.error("检查分类是否存在失败:", error);
-    throw error;
+ipcMain.handle(
+  "category-exists",
+  async (event: IpcMainInvokeEvent, name: string) => {
+    try {
+      if (!categoryORM) throw new Error("数据库未初始化");
+      return categoryORM.exists(name);
+    } catch (error) {
+      console.error("检查分类是否存在失败:", error);
+      throw error;
+    }
   }
-}); 
+);
