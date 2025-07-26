@@ -37,7 +37,15 @@ let categoryORM: CategoryORM | null = null;
 
 // 确保数据目录存在
 function ensureDataDirectory(): void {
-  const dataDir = path.join(__dirname, "data");
+  let dataDir: string;
+  if (isDev) {
+    // 开发环境下使用项目目录
+    dataDir = path.join(__dirname, "data");
+  } else {
+    // 生产环境下使用用户数据目录
+    dataDir = path.join(app.getPath("userData"), "data");
+  }
+
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
     console.log("数据目录已创建:", dataDir);
@@ -48,10 +56,18 @@ function ensureDataDirectory(): void {
 function initializeDatabase(): void {
   try {
     ensureDataDirectory();
-    const dbPath = path.join(__dirname, "data", "pomodoro.db");
+    let dbPath: string;
+    if (isDev) {
+      // 开发环境下使用项目目录
+      dbPath = path.join(__dirname, "data", "pomodoro.db");
+    } else {
+      // 生产环境下使用用户数据目录
+      dbPath = path.join(app.getPath("userData"), "data", "pomodoro.db");
+    }
+
     taskORM = new TaskORM(dbPath);
     categoryORM = new CategoryORM(dbPath);
-    console.log("SQLite数据库初始化成功");
+    console.log("SQLite数据库初始化成功，数据库路径:", dbPath);
   } catch (error) {
     console.error("数据库初始化失败:", error);
     throw error;
