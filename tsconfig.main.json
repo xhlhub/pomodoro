@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["main.ts", "src/db/**/*", "src/types/**/*"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "src/components/**/*",
+    "src/hooks/**/*",
+    "src/services/**/*",
+    "src/utils/**/*",
+    "src/config/**/*",
+    "src/assets/**/*",
+    "src/App.tsx",
+    "src/index.tsx",
+    "src/index.css",
+    "src/App.css"
+  ]
+}
