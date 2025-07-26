@@ -1,6 +1,6 @@
 {
   "name": "pomodoro-for-her",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "A beautiful Pomodoro timer desktop application built with React and Electron",
   "main": "dist/main.js",
   "homepage": "./",
@@ -9,8 +9,8 @@
     "dev": "concurrently \"npm run react-dev\" \"npm run compile-main:watch\" \"wait-on http://localhost:3000 && wait-on dist/main.js && electron .\"",
     "react-dev": "react-scripts start",
     "react-build": "react-scripts build",
-    "compile-main": "tsc main.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck",
-    "compile-main:watch": "tsc main.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck --watch",
+    "compile-main": "tsc -p tsconfig.main.json",
+    "compile-main:watch": "tsc -p tsconfig.main.json --watch",
     "build": "npm run react-build && npm run compile-main && electron-builder",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
@@ -46,11 +46,11 @@
     "appId": "com.pomodoro.love",
     "productName": "Pomodoro for Her",
     "directories": {
-      "output": "dist",
+      "output": "output",
       "buildResources": "build"
     },
     "files": [
-      "dist/main.js",
+      "dist/**/*",
       "build/**/*",
       "audio/**/*",
       "icon.ico",
@@ -68,6 +68,18 @@
         "zip"
       ],
       "icon": "icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        "zip"
+      ]
     },
     "nsis": {
       "oneClick": false,
