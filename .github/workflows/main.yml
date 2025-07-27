@@ -34,7 +34,7 @@ jobs:
           python-version: "3.x"
 
       - name: Rebuild native dependencies
-        run: npm rebuild better-sqlite3 --build-from-source
+        run: npx @electron/rebuild
 
       - name: Compile TypeScript
         run: npm run compile-main
@@ -59,6 +59,18 @@ jobs:
       - name: Build and package (Windows)
         run: npx electron-builder --win
 
+      - name: Check build output
+        run: |
+          echo "Checking build output..."
+          dir output
+          echo "Checking file sizes..."
+          for file in output/*.exe; do
+            if [ -f "$file" ]; then
+              echo "File: $file"
+              dir "$file"
+            fi
+          done
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -81,7 +93,7 @@ jobs:
         run: npm ci
 
       - name: Rebuild native dependencies
-        run: npm rebuild better-sqlite3 --build-from-source
+        run: npx @electron/rebuild
 
       - name: Compile TypeScript
         run: npm run compile-main
