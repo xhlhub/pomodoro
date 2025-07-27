@@ -24,6 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -33,8 +34,32 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Debug environment
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Python version: $(python --version)"
+          echo "Current directory: $(pwd)"
+          echo "Listing files:"
+          dir
+          echo "Listing node_modules:"
+          dir node_modules | findstr electron
+
       - name: Rebuild native dependencies
-        run: npx @electron/rebuild
+        run: |
+          echo "Installing app dependencies..."
+          npm run postinstall
+          echo "Rebuilding native modules..."
+          npm run rebuild
+          echo "Checking better-sqlite3 installation..."
+          node -e "console.log('better-sqlite3 path:', require.resolve('better-sqlite3'))"
+        continue-on-error: true
+
+      - name: Rebuild native dependencies (fallback)
+        if: failure()
+        run: |
+          echo "Primary rebuild failed, trying custom rebuild script..."
+          npm run rebuild:custom
 
       - name: Compile TypeScript
         run: npm run compile-main
@@ -88,12 +113,36 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug environment
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current directory: $(pwd)"
+          echo "Listing files:"
+          ls -la
+          echo "Listing node_modules:"
+          ls -la node_modules | grep electron
+
       - name: Rebuild native dependencies
-        run: npx @electron/rebuild
+        run: |
+          echo "Installing app dependencies..."
+          npm run postinstall
+          echo "Rebuilding native modules..."
+          npm run rebuild
+          echo "Checking better-sqlite3 installation..."
+          node -e "console.log('better-sqlite3 path:', require.resolve('better-sqlite3'))"
+        continue-on-error: true
+
+      - name: Rebuild native dependencies (fallback)
+        if: failure()
+        run: |
+          echo "Primary rebuild failed, trying custom rebuild script..."
+          npm run rebuild:custom
 
       - name: Compile TypeScript
         run: npm run compile-main

@@ -11,7 +11,9 @@
     "react-build": "react-scripts build",
     "compile-main": "tsc -p tsconfig.main.json",
     "compile-main:watch": "tsc -p tsconfig.main.json --watch",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && npx @electron/rebuild --only-deps",
+    "rebuild": "npx @electron/rebuild --only-deps",
+    "rebuild:custom": "node scripts/rebuild.js",
     "build": "npm run react-build && npm run compile-main && electron-builder",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
