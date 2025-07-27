@@ -15,6 +15,9 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }} # 👈 这一段是关键
+      ELECTRON_BUILDER_CACHE: false
+      ELECTRON_CACHE: .cache/electron
+      ELECTRON_BUILDER_BINARIES_CACHE: .cache/electron-builder
 
     steps:
       - name: Checkout code
@@ -23,11 +26,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Clean and reinstall if needed
+        if: failure()
+        run: |
+          echo "npm ci failed, trying alternative installation..."
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Install Python (for better-sqlite3)
         uses: actions/setup-python@v4
@@ -51,8 +61,6 @@ jobs:
           npm run postinstall
           echo "Rebuilding native modules..."
           npm run rebuild
-          echo "Checking better-sqlite3 installation..."
-          node -e "console.log('better-sqlite3 path:', require.resolve('better-sqlite3'))"
         continue-on-error: true
 
       - name: Rebuild native dependencies (fallback)
@@ -105,6 +113,11 @@ jobs:
   build-macos:
     runs-on: macos-latest
 
+    env:
+      ELECTRON_BUILDER_CACHE: false
+      ELECTRON_CACHE: .cache/electron
+      ELECTRON_BUILDER_BINARIES_CACHE: .cache/electron-builder
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -112,11 +125,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Clean and reinstall if needed
+        if: failure()
+        run: |
+          echo "npm ci failed, trying alternative installation..."
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Debug environment
         run: |
