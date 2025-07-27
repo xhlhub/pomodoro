@@ -30,13 +30,14 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Clean and reinstall if needed
         if: failure()
         run: |
-          echo "npm ci failed, trying alternative installation..."
+          echo "npm install failed, trying alternative installation..."
           Remove-Item -Path "node_modules" -Recurse -Force -ErrorAction SilentlyContinue
+          npm cache clean --force
           npm install --legacy-peer-deps --verbose
 
       - name: Install Python (for better-sqlite3)
@@ -136,13 +137,14 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Clean and reinstall if needed
         if: failure()
         run: |
-          echo "npm ci failed, trying alternative installation..."
+          echo "npm install failed, trying alternative installation..."
           rm -rf node_modules
+          npm cache clean --force
           npm install --legacy-peer-deps --verbose
 
       - name: Debug environment
