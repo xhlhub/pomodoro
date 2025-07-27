@@ -105,12 +105,11 @@ jobs:
           echo "Checking build output..."
           dir output
           echo "Checking file sizes..."
-          for file in output/*.exe; do
-            if [ -f "$file" ]; then
-              echo "File: $file"
-              dir "$file"
-            fi
-          done
+          Get-ChildItem -Path "output\*.exe" | ForEach-Object {
+            echo "File: $($_.Name)"
+            echo "Size: $($_.Length) bytes"
+            echo "Full path: $($_.FullName)"
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
