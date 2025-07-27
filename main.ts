@@ -99,8 +99,8 @@ function createWindow(): void {
   if (isDev) {
     startUrl = "http://localhost:3000";
   } else {
-    // 生产环境下，build文件夹在应用根目录中
-    const buildPath = path.join(__dirname, "build", "index.html");
+    // 生产环境下，build文件夹与dist目录同级
+    const buildPath = path.join(__dirname, "..", "build", "index.html");
     startUrl = `file://${buildPath}`;
   }
 
