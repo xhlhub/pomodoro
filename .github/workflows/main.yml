@@ -26,7 +26,7 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install Python (for better-sqlite3)
         uses: actions/setup-python@v4
@@ -34,7 +34,7 @@ jobs:
           python-version: "3.x"
 
       - name: Rebuild native dependencies
-        run: npm run electron-rebuild
+        run: npm rebuild better-sqlite3 --build-from-source
 
       - name: Compile TypeScript
         run: npm run compile-main
@@ -49,6 +49,12 @@ jobs:
         run: |
           dir dist
           dir build
+          echo "Node version:"
+          node --version
+          echo "NPM version:"
+          npm --version
+          echo "Current directory:"
+          pwd
 
       - name: Build and package (Windows)
         run: npx electron-builder --win
@@ -62,9 +68,6 @@ jobs:
   build-macos:
     runs-on: macos-latest
 
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,10 +78,10 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Rebuild native dependencies
-        run: npm run electron-rebuild
+        run: npm rebuild better-sqlite3 --build-from-source
 
       - name: Compile TypeScript
         run: npm run compile-main
@@ -93,6 +96,12 @@ jobs:
         run: |
           ls -la dist
           ls -la build
+          echo "Node version:"
+          node --version
+          echo "NPM version:"
+          npm --version
+          echo "Current directory:"
+          pwd
 
       - name: Build and package (macOS)
         run: npx electron-builder --mac

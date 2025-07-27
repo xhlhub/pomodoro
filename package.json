@@ -11,7 +11,6 @@
     "react-build": "react-scripts build",
     "compile-main": "tsc -p tsconfig.main.json",
     "compile-main:watch": "tsc -p tsconfig.main.json --watch",
-    "electron-rebuild": "electron-rebuild",
     "build": "npm run react-build && npm run compile-main && electron-builder",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
@@ -40,7 +39,6 @@
     "concurrently": "^8.2.2",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
-    "electron-rebuild": "^3.2.9",
     "typescript": "^4.9.5",
     "wait-on": "^7.2.0"
   },
@@ -55,6 +53,7 @@
     "files": [
       "dist/**/*",
       "icon.ico",
+      "icon.png",
       "package.json",
       "node_modules/better-sqlite3/**/*"
     ],
@@ -90,7 +89,8 @@
           ]
         },
         "zip"
-      ]
+      ],
+      "icon": "icon.png"
     },
     "nsis": {
       "oneClick": false,

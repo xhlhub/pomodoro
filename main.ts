@@ -86,7 +86,10 @@ function createWindow(): void {
       contextIsolation: false,
       webSecurity: false, // 允许加载本地资源
     },
-    icon: path.join(__dirname, "icon.ico"),
+    icon:
+      process.platform === "win32"
+        ? path.join(__dirname, "icon.ico")
+        : path.join(__dirname, "icon.png"),
     title: "Pomodoro for Her",
     show: false,
   });
@@ -156,7 +159,10 @@ ipcMain.on("pomodoro-complete", (event: IpcMainEvent, taskName: string) => {
     const notification = new Notification({
       title: "番茄钟完成！",
       body: `任务 "${taskName}" 的番茄钟时间到了，休息一下吧！`,
-      icon: path.join(__dirname, "icon.ico"),
+      icon:
+        process.platform === "win32"
+          ? path.join(__dirname, "icon.ico")
+          : path.join(__dirname, "icon.png"),
       silent: false,
     });
 
