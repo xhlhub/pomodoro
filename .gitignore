@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Lock files (temporarily ignored due to CI compatibility issues)
+package-lock.json
+
 # Build outputs
 dist/
 build/
