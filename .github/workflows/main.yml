@@ -25,15 +25,27 @@ jobs:
 
       - name: Clean lock file
         run: |
-          echo "Removing potentially incompatible lock file..."
-          Remove-Item -Path "package-lock.json" -Force -ErrorAction SilentlyContinue
-          echo "Lock file removed, will regenerate during install"
+          echo "Checking for existing lock files..."
+          if (Test-Path "package-lock.json") {
+            $content = Get-Content "package-lock.json" -Raw
+            if ($content -notlike "*lockfileVersion*2*") {
+              echo "Removing incompatible lock file..."
+              Remove-Item -Path "package-lock.json" -Force
+            } else {
+              echo "Temporary lock file found, keeping for cache..."
+            }
+          }
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
+
+      - name: Create temporary lock file for cache
+        run: |
+          echo "Creating temporary package-lock.json for npm cache..."
+          echo '{"lockfileVersion": 2}' > package-lock.json
 
       - name: Install dependencies
         run: node scripts/install-deps.js
@@ -44,7 +56,6 @@ jobs:
           echo "Custom install failed, trying manual cleanup..."
           Remove-Item -Path "node_modules" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "package-lock.json" -Force -ErrorAction SilentlyContinue
-          npm cache clean --force
           npm install --legacy-peer-deps --force --no-optional --no-audit --verbose
 
       - name: Install Python (for better-sqlite3)
@@ -62,6 +73,13 @@ jobs:
           dir
           echo "Listing node_modules:"
           dir node_modules | findstr electron
+
+      - name: Verify installation
+        run: |
+          echo "Verifying dependencies installation..."
+          npm run verify
+          echo "Checking electron installation..."
+          npx electron --version
 
       - name: Rebuild native dependencies
         run: |
@@ -132,15 +150,26 @@ jobs:
 
       - name: Clean lock file
         run: |
-          echo "Removing potentially incompatible lock file..."
-          rm -f package-lock.json
-          echo "Lock file removed, will regenerate during install"
+          echo "Checking for existing lock files..."
+          if [ -f "package-lock.json" ]; then
+            if ! grep -q '"lockfileVersion": 2' package-lock.json; then
+              echo "Removing incompatible lock file..."
+              rm -f package-lock.json
+            else
+              echo "Temporary lock file found, keeping for cache..."
+            fi
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
+
+      - name: Create temporary lock file for cache
+        run: |
+          echo "Creating temporary package-lock.json for npm cache..."
+          echo '{"lockfileVersion": 2}' > package-lock.json
 
       - name: Install dependencies
         run: node scripts/install-deps.js
@@ -150,7 +179,6 @@ jobs:
         run: |
           echo "Custom install failed, trying manual cleanup..."
           rm -rf node_modules package-lock.json
-          npm cache clean --force
           npm install --legacy-peer-deps --force --no-optional --no-audit --verbose
 
       - name: Debug environment
@@ -163,14 +191,19 @@ jobs:
           echo "Listing node_modules:"
           ls -la node_modules | grep electron
 
+      - name: Verify installation
+        run: |
+          echo "Verifying dependencies installation..."
+          npm run verify
+          echo "Checking electron installation..."
+          npx electron --version
+
       - name: Rebuild native dependencies
         run: |
           echo "Installing app dependencies..."
           npm run postinstall
           echo "Rebuilding native modules..."
           npm run rebuild
-          echo "Checking better-sqlite3 installation..."
-          node -e "console.log('better-sqlite3 path:', require.resolve('better-sqlite3'))"
         continue-on-error: true
 
       - name: Rebuild native dependencies (fallback)

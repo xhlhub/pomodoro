@@ -52,7 +52,6 @@ async function main() {
     // Method 2: Clean and retry
     console.log("\n🚀 Method 2: Clean install...");
     cleanupFiles();
-    runCommand("npm cache clean --force");
 
     if (runCommand("npm install --legacy-peer-deps --no-optional")) {
       console.log("✅ Method 2 succeeded!");

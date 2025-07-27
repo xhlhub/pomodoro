@@ -15,6 +15,7 @@
     "rebuild": "npx @electron/rebuild",
     "rebuild:custom": "node scripts/rebuild.js",
     "install:custom": "node scripts/install-deps.js",
+    "verify": "node scripts/verify-install.js",
     "build": "npm run react-build && npm run compile-main && electron-builder",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
