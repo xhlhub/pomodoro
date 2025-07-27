@@ -5,6 +5,10 @@ on:
     tags:
       - "v*.*.*" # 每次打 tag 会触发构建（如 v1.0.0）
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -24,8 +28,27 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install Python (for better-sqlite3)
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Rebuild native dependencies
+        run: npm run electron-rebuild
+
+      - name: Compile TypeScript
+        run: npm run compile-main
+
+      - name: Build React app
+        run: npm run react-build
+
       - name: Confirm main.js exists
-        run: dir main.js
+        run: dir dist\main.js
+
+      - name: Confirm build files exist
+        run: |
+          dir dist
+          dir build
 
       - name: Build and package (Windows)
         run: npx electron-builder --win
@@ -34,4 +57,48 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: dist/*.exe
+          path: output/*.exe
+
+  build-macos:
+    runs-on: macos-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Rebuild native dependencies
+        run: npm run electron-rebuild
+
+      - name: Compile TypeScript
+        run: npm run compile-main
+
+      - name: Build React app
+        run: npm run react-build
+
+      - name: Confirm main.js exists
+        run: ls -la dist/main.js
+
+      - name: Confirm build files exist
+        run: |
+          ls -la dist
+          ls -la build
+
+      - name: Build and package (macOS)
+        run: npx electron-builder --mac
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: output/*.dmg

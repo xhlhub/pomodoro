@@ -11,6 +11,7 @@
     "react-build": "react-scripts build",
     "compile-main": "tsc -p tsconfig.main.json",
     "compile-main:watch": "tsc -p tsconfig.main.json --watch",
+    "electron-rebuild": "electron-rebuild",
     "build": "npm run react-build && npm run compile-main && electron-builder",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
