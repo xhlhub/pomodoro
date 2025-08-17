@@ -17,6 +17,7 @@
     "install:custom": "node scripts/install-deps.js",
     "verify": "node scripts/verify-install.js",
     "build": "npm run react-build && npm run compile-main && electron-builder",
+    "build:mac": "./scripts/build-mac.sh",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
   "keywords": [
@@ -86,12 +87,22 @@
         {
           "target": "dmg",
           "arch": [
-            "x64"
+            "x64",
+            "arm64"
           ]
         },
-        "zip"
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
-      "icon": "icon.png"
+      "icon": "icon.icns",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
     },
     "nsis": {
       "oneClick": false,
