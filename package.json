@@ -18,6 +18,7 @@
     "verify": "node scripts/verify-install.js",
     "build": "npm run react-build && npm run compile-main && electron-builder",
     "build:mac": "./scripts/build-mac.sh",
+    "fix:mac": "./scripts/fix-mac-app.sh",
     "dist": "npm run react-build && npm run compile-main && electron-builder"
   },
   "keywords": [
@@ -102,7 +103,13 @@
       "icon": "icon.icns",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "identity": null
+      "identity": null,
+      "notarize": false,
+      "electronLanguages": [
+        "en",
+        "zh-CN"
+      ],
+      "minimumSystemVersion": "10.14.0"
     },
     "nsis": {
       "oneClick": false,

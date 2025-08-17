@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 开始构建Mac应用..."
+echo "🚀 开始构建通用Mac应用 (Apple Silicon + Intel)..."
 
 # 检查依赖
 if ! command -v sips &> /dev/null; then
@@ -43,27 +43,41 @@ echo "🔨 构建应用..."
 npm run react-build
 npm run compile-main
 
-# 打包
-echo "📦 开始打包..."
-npx electron-builder --mac
+# 创建通用二进制文件
+echo "🔧 创建通用二进制文件..."
 
-echo "✅ Mac应用构建完成！"
+# 先构建x64版本
+echo "📦 构建x64版本..."
+npx electron-builder --mac --x64
+
+# 再构建arm64版本
+echo "📦 构建arm64版本..."
+npx electron-builder --mac --arm64
+
+# 创建通用版本 (Universal Binary)
+echo "🔗 创建通用版本..."
+mkdir -p output/universal
+cp -r "output/mac/Pomodoro for Her.app" "output/universal/Pomodoro for Her.app"
+
+# 使用lipo创建通用二进制文件
+echo "🔗 合并架构..."
+lipo -create \
+  "output/mac/Pomodoro for Her.app/Contents/MacOS/Pomodoro for Her" \
+  "output/mac-arm64/Pomodoro for Her.app/Contents/MacOS/Pomodoro for Her" \
+  -output "output/universal/Pomodoro for Her.app/Contents/MacOS/Pomodoro for Her"
+
+# 复制arm64的Frameworks
+echo "📁 复制Frameworks..."
+cp -r "output/mac-arm64/Pomodoro for Her.app/Contents/Frameworks/Electron Framework.framework" \
+  "output/universal/Pomodoro for Her.app/Contents/Frameworks/"
+
+# 创建通用DMG
+echo "📦 创建通用DMG..."
+npx electron-builder --mac --universal
+
+echo "✅ 通用Mac应用构建完成！"
 echo "📁 输出文件位于: output/ 目录"
+echo "🔍 通用版本位于: output/universal/ 目录"
 echo ""
-echo "🔧 如果遇到'已损坏，无法打开'错误，请按以下步骤解决："
-echo ""
-echo "方法1: 移除隔离属性 (推荐)"
-echo "   1. 将应用拖到应用程序文件夹"
-echo "   2. 在终端运行: sudo xattr -rd com.apple.quarantine '/Applications/Pomodoro for Her.app'"
-echo "   3. 重新打开应用"
-echo ""
-echo "方法2: 通过系统偏好设置允许"
-echo "   1. 系统偏好设置 > 安全性与隐私 > 通用"
-echo "   2. 点击'仍要打开'按钮"
-echo ""
-echo "方法3: 右键点击应用 > 打开"
-echo "   1. 在应用程序文件夹中右键点击应用"
-echo "   2. 选择'打开'"
-echo "   3. 在对话框中点击'打开'"
-echo ""
-echo "💡 这些方法可以解决未签名应用在macOS上的运行问题" 
+echo "💡 如果遇到'已损坏'错误，请运行以下命令："
+echo "   sudo xattr -rd com.apple.quarantine '/Applications/Pomodoro for Her.app'" 

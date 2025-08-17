@@ -78,6 +78,53 @@ npx electron-builder --mac
 - 当前配置为开发模式，无需开发者证书
 - 如需发布到 App Store，需要配置相应的证书和描述文件
 
+### Apple Silicon "已损坏" 问题
+
+这是 macOS 安全机制导致的问题，未签名的应用会被阻止运行。解决方法：
+
+#### 方法 1：使用修复脚本（推荐）
+
+```bash
+# 先构建应用
+npm run build:mac
+
+# 安装到应用程序文件夹后，运行修复脚本
+npm run fix:mac
+```
+
+#### 方法 2：手动移除隔离属性
+
+```bash
+# 将应用拖到应用程序文件夹后，在终端运行：
+sudo xattr -rd com.apple.quarantine '/Applications/Pomodoro for Her.app'
+```
+
+#### 方法 3：通过系统设置允许
+
+1. 系统偏好设置 > 安全性与隐私 > 通用
+2. 点击"仍要打开"按钮
+3. 确认允许运行
+
+#### 方法 4：右键打开
+
+1. 在应用程序文件夹中右键点击应用
+2. 选择"打开"
+3. 在对话框中点击"打开"
+
+### 为什么会出现"已损坏"错误？
+
+- **macOS Gatekeeper**: 系统安全机制阻止未签名应用运行
+- **隔离属性**: 从网络下载的应用会被标记为隔离状态
+- **架构兼容性**: Apple Silicon 需要 arm64 架构支持
+- **代码签名**: 没有 Apple 开发者证书的应用会被阻止
+
+### 预防措施
+
+- 使用 `npm run build:mac` 构建，会自动生成正确的图标格式
+- 确保 `build/icon.icns` 文件存在
+- 在 Apple Silicon Mac 上测试 arm64 版本
+- 考虑使用通用二进制文件（Universal Binary）
+
 ## 技术细节
 
 ### 图标生成
