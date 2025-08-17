@@ -55,6 +55,16 @@ function ensureDataDirectory(): void {
 // 初始化数据库
 function initializeDatabase(): void {
   try {
+    // 如果数据库已经初始化，先关闭现有连接
+    if (taskORM) {
+      taskORM.close();
+      taskORM = null;
+    }
+    if (categoryORM) {
+      categoryORM.close();
+      categoryORM = null;
+    }
+
     ensureDataDirectory();
     let dbPath: string;
     if (isDev) {
@@ -70,6 +80,9 @@ function initializeDatabase(): void {
     console.log("SQLite数据库初始化成功，数据库路径:", dbPath);
   } catch (error) {
     console.error("数据库初始化失败:", error);
+    // 重置状态
+    taskORM = null;
+    categoryORM = null;
     throw error;
   }
 }
@@ -149,6 +162,11 @@ app.on("window-all-closed", () => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
+    // 在Mac上重新激活时，确保数据库已初始化
+    if (!taskORM || !categoryORM) {
+      console.log("重新初始化数据库...");
+      initializeDatabase();
+    }
     createWindow();
   }
 });
@@ -205,8 +223,11 @@ ipcMain.handle(
   "task-create",
   async (event: IpcMainInvokeEvent, taskData: Omit<Task, "id">) => {
     try {
-      if (!taskORM) throw new Error("数据库未初始化");
-      return taskORM.create(taskData);
+      if (!taskORM) {
+        console.log("数据库未初始化，尝试重新初始化...");
+        initializeDatabase();
+      }
+      return taskORM!.create(taskData);
     } catch (error) {
       console.error("创建任务失败:", error);
       throw error;
@@ -217,8 +238,11 @@ ipcMain.handle(
 // 查询所有任务
 ipcMain.handle("task-find-all", async (event: IpcMainInvokeEvent) => {
   try {
-    if (!taskORM) throw new Error("数据库未初始化");
-    return taskORM.findAll();
+    if (!taskORM) {
+      console.log("数据库未初始化，尝试重新初始化...");
+      initializeDatabase();
+    }
+    return taskORM!.findAll();
   } catch (error) {
     console.error("查询任务失败:", error);
     throw error;
@@ -257,8 +281,11 @@ ipcMain.handle("task-delete", async (event: IpcMainInvokeEvent, id: number) => {
 // 获取活跃任务（未完成任务 + 今日创建的任务）
 ipcMain.handle("task-find-active", async (event: IpcMainInvokeEvent) => {
   try {
-    if (!taskORM) throw new Error("数据库未初始化");
-    return taskORM.findActiveTasks();
+    if (!taskORM) {
+      console.log("数据库未初始化，尝试重新初始化...");
+      initializeDatabase();
+    }
+    return taskORM!.findActiveTasks();
   } catch (error) {
     console.error("查询活跃任务失败:", error);
     throw error;
@@ -313,8 +340,11 @@ ipcMain.handle(
 // 查询所有分类
 ipcMain.handle("category-find-all", async (event: IpcMainInvokeEvent) => {
   try {
-    if (!categoryORM) throw new Error("数据库未初始化");
-    return categoryORM.findAll();
+    if (!categoryORM) {
+      console.log("数据库未初始化，尝试重新初始化...");
+      initializeDatabase();
+    }
+    return categoryORM!.findAll();
   } catch (error) {
     console.error("查询分类失败:", error);
     throw error;
@@ -337,8 +367,11 @@ ipcMain.handle(
   "category-add",
   async (event: IpcMainInvokeEvent, name: string) => {
     try {
-      if (!categoryORM) throw new Error("数据库未初始化");
-      return categoryORM.addCategory(name);
+      if (!categoryORM) {
+        console.log("数据库未初始化，尝试重新初始化...");
+        initializeDatabase();
+      }
+      return categoryORM!.addCategory(name);
     } catch (error) {
       console.error("添加分类失败:", error);
       throw error;
